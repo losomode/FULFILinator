@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'drf_spectacular',
     # Local apps
     'core',
     'items',
@@ -154,6 +155,17 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# API Documentation (drf-spectacular)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'FULFILinator API',
+    'DESCRIPTION': 'Order fulfillment tracking system - Manages Purchase Orders, Orders, and Deliveries with fulfillment visibility',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': r'/api/fulfil',
 }
 
 # Simple JWT settings
@@ -186,3 +198,14 @@ AUTHINATOR_VERIFY_SSL = config('AUTHINATOR_VERIFY_SSL', default=False, cast=bool
 # Service Registry Configuration
 SERVICE_REGISTRY_URL = config('SERVICE_REGISTRY_URL', default='http://localhost:8000/api/services/register/')
 SERVICE_REGISTRATION_KEY = config('SERVICE_REGISTRATION_KEY', default='dev-service-key-change-in-production')
+
+# Email Configuration
+# Use console backend for development (prints emails to console)
+# In production, set EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@fulfilinator.local')

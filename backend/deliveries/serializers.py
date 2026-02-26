@@ -4,6 +4,7 @@ Serializers for deliveries app.
 from rest_framework import serializers
 from items.models import Item
 from deliveries.models import Delivery, DeliveryLineItem
+from core.authinator_client import authinator_client
 
 
 class DeliveryLineItemSerializer(serializers.ModelSerializer):
@@ -66,6 +67,7 @@ class DeliverySerializer(serializers.ModelSerializer):
     """Serializer for Delivery with nested line items."""
     
     line_items = DeliveryLineItemSerializer(many=True, required=False)
+    customer_name = serializers.SerializerMethodField()
     created_by_user_id = serializers.CharField(read_only=True)
     
     class Meta:
@@ -74,6 +76,7 @@ class DeliverySerializer(serializers.ModelSerializer):
             'id',
             'delivery_number',
             'customer_id',
+            'customer_name',
             'ship_date',
             'tracking_number',
             'status',
@@ -94,6 +97,13 @@ class DeliverySerializer(serializers.ModelSerializer):
             'closed_at',
             'closed_by_user_id'
         ]
+    
+    def get_customer_name(self, obj):
+        """
+        Get customer name from AUTHinator.
+        """
+        customer_data = authinator_client.get_customer(obj.customer_id)
+        return customer_data['name'] if customer_data else None
     
     def create(self, validated_data):
         """Create Delivery with nested line items."""

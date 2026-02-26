@@ -5,6 +5,7 @@ from rest_framework import serializers
 from items.models import Item
 from orders.models import Order, OrderLineItem
 from orders.allocation import POAllocator
+from core.authinator_client import authinator_client
 
 
 class OrderLineItemSerializer(serializers.ModelSerializer):
@@ -68,6 +69,7 @@ class OrderSerializer(serializers.ModelSerializer):
     
     line_items = OrderLineItemSerializer(many=True, required=False)
     fulfillment_status = serializers.SerializerMethodField()
+    customer_name = serializers.SerializerMethodField()
     created_by_user_id = serializers.CharField(read_only=True)
     allocate_from_po = serializers.BooleanField(write_only=True, required=False, default=True)
     
@@ -77,6 +79,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'id',
             'order_number',
             'customer_id',
+            'customer_name',
             'status',
             'notes',
             'created_at',
@@ -99,29 +102,19 @@ class OrderSerializer(serializers.ModelSerializer):
             'fulfillment_status'
         ]
     
+    def get_customer_name(self, obj):
+        """
+        Get customer name from AUTHinator.
+        """
+        customer_data = authinator_client.get_customer(obj.customer_id)
+        return customer_data['name'] if customer_data else None
+    
     def get_fulfillment_status(self, obj):
         """
-        Calculate fulfillment status for each line item.
-        Returns list of dicts with item_id, order_quantity, delivered_quantity, remaining_quantity.
+        Get fulfillment status from model method.
+        Returns dict with line_items breakdown, deliveries list, and source_pos list.
         """
-        fulfillment = []
-        
-        for line_item in obj.line_items.all():
-            # For now, delivered_quantity is 0 since deliveries app not implemented yet
-            # TODO: Calculate from deliveries.models.DeliveryLineItem when implemented
-            delivered_quantity = 0
-            
-            fulfillment.append({
-                'item_id': line_item.item.id,
-                'item_name': line_item.item.name,
-                'item_version': line_item.item.version,
-                'order_quantity': line_item.quantity,
-                'delivered_quantity': delivered_quantity,
-                'remaining_quantity': line_item.quantity - delivered_quantity,
-                'po_number': line_item.po_line_item.po.po_number if line_item.po_line_item else None
-            })
-        
-        return fulfillment
+        return obj.get_fulfillment_status()
     
     def create(self, validated_data):
         """Create Order with nested line items and optional PO allocation."""

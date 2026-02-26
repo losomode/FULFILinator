@@ -66,6 +66,11 @@ class Order(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Order'
         verbose_name_plural = 'Orders'
+        indexes = [
+            models.Index(fields=['customer_id']),
+            models.Index(fields=['status']),
+            models.Index(fields=['-created_at']),
+        ]
     
     def save(self, *args, **kwargs):
         """
@@ -102,6 +107,89 @@ class Order(models.Model):
         
         return f'{prefix}{new_seq:04d}'
     
+    def get_fulfillment_status(self):
+        """
+        Calculate fulfillment status for this Order.
+        
+        Returns dict with:
+        - line_items: list of dicts with original/delivered/remaining per item
+        - deliveries: list of delivery numbers that fulfilled this Order
+        - source_pos: list of PO numbers this Order was allocated from
+        """
+        from django.db.models import Sum
+        
+        line_items_status = []
+        deliveries_dict = {}
+        pos_dict = {}
+        
+        for line_item in self.line_items.select_related('item', 'po_line_item__po').all():
+            # Calculate delivered quantity from DeliveryLineItems that reference this Order line item
+            delivered_qty = line_item.deliverylineitem_set.aggregate(
+                total=Sum('id')  # Count individual delivery line items (one per serial number)
+            )['total'] or 0
+            # Since each DeliveryLineItem represents one physical item with one serial number,
+            # we just count the number of DeliveryLineItems
+            delivered_qty = line_item.deliverylineitem_set.count()
+            
+            waived_qty = line_item.waived_quantity
+            remaining_qty = line_item.quantity - delivered_qty - waived_qty
+            
+            line_items_status.append({
+                'line_item_id': line_item.id,
+                'item_id': line_item.item.id,
+                'item_name': str(line_item.item),
+                'original_quantity': line_item.quantity,
+                'delivered_quantity': delivered_qty,
+                'waived_quantity': waived_qty,
+                'remaining_quantity': remaining_qty,
+                'price_per_unit': str(line_item.price_per_unit),
+            })
+            
+            # Collect deliveries that reference this line item
+            for delivery_line_item in line_item.deliverylineitem_set.select_related('delivery').all():
+                delivery = delivery_line_item.delivery
+                deliveries_dict[delivery.id] = {
+                    'delivery_id': delivery.id,
+                    'delivery_number': delivery.delivery_number,
+                }
+            
+            # Collect source PO if this order line item references a PO
+            if line_item.po_line_item:
+                po = line_item.po_line_item.po
+                pos_dict[po.id] = {
+                    'po_id': po.id,
+                    'po_number': po.po_number,
+                }
+        
+        return {
+            'line_items': line_items_status,
+            'deliveries': list(deliveries_dict.values()),
+            'source_pos': list(pos_dict.values()),
+        }
+    
+    def is_ready_to_close(self) -> bool:
+        """
+        Check if Order is ready to be closed.
+        
+        Order is ready when all line items are either:
+        - Fully delivered (delivered_qty = original_qty)
+        - Fully waived (waived_qty = original_qty)
+        - Combination (delivered_qty + waived_qty = original_qty)
+        
+        Returns:
+            True if ready to close, False otherwise
+        """
+        for line_item in self.line_items.all():
+            # Count actual deliveries (each DeliveryLineItem is one physical item)
+            delivered_qty = line_item.deliverylineitem_set.count()
+            waived_qty = line_item.waived_quantity
+            remaining_qty = line_item.quantity - delivered_qty - waived_qty
+            
+            if remaining_qty > 0:
+                return False
+        
+        return True
+    
     def __str__(self):
         """String representation of order."""
         return self.order_number
@@ -134,6 +222,11 @@ class OrderLineItem(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))],
         help_text="Price per unit (from PO or overridden)"
+    )
+    waived_quantity = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0)],
+        help_text="Quantity waived (not to be delivered)"
     )
     po_line_item = models.ForeignKey(
         'purchase_orders.POLineItem',

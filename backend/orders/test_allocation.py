@@ -255,9 +255,43 @@ class TestPOAllocator:
     
     def test_allocate_considers_already_ordered_quantities(self, item1):
         """Test that allocation accounts for quantities already ordered from POs."""
-        # This will be implemented in Phase 3.1.3 when Orders can reference PO line items
-        # For now, this test documents the expected behavior
-        pass
+        from orders.models import Order, OrderLineItem
+        
+        # Create PO with 10 items
+        po = PurchaseOrder.objects.create(
+            customer_id="cust-123",
+            start_date=date.today(),
+            created_by_user_id="sys-admin-1"
+        )
+        po_line = POLineItem.objects.create(
+            po=po,
+            item=item1,
+            quantity=10,
+            price_per_unit=Decimal("899.99")
+        )
+        
+        # Create existing order that already ordered 6 items
+        order = Order.objects.create(
+            customer_id="cust-123",
+            created_by_user_id="sys-admin-1"
+        )
+        OrderLineItem.objects.create(
+            order=order,
+            item=item1,
+            quantity=6,
+            price_per_unit=Decimal("899.99"),
+            po_line_item=po_line
+        )
+        
+        # Try to allocate 5 more items (only 4 available: 10 - 6 = 4)
+        allocator = POAllocator(customer_id="cust-123")
+        result = allocator.allocate(item1, requested_quantity=5, allow_override=False)
+        
+        # Should fail because only 4 available
+        assert result.success is False
+        assert result.total_allocated == 4
+        assert result.remaining == 1
+        assert "Insufficient PO quantity" in result.error_message
     
     def test_allocate_multiple_items(self, item1, item2):
         """Test allocating multiple different items at once."""

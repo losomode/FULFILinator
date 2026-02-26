@@ -73,6 +73,13 @@ class Delivery(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Delivery'
         verbose_name_plural = 'Deliveries'
+        indexes = [
+            models.Index(fields=['customer_id']),
+            models.Index(fields=['status']),
+            models.Index(fields=['ship_date']),
+            models.Index(fields=['tracking_number']),
+            models.Index(fields=['-created_at']),
+        ]
     
     def save(self, *args, **kwargs):
         """

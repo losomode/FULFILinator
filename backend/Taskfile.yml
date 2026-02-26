@@ -1,0 +1,66 @@
+version: '3'
+
+vars:
+  PYTHON: python3
+  PYTEST: pytest
+  COVERAGE_MIN: 85
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  test:
+    desc: Run all tests
+    cmds:
+      - "{{.PYTHON}} -m {{.PYTEST}} -v"
+
+  test:coverage:
+    desc: Run tests with coverage (MUST be ≥85%)
+    cmds:
+      - "{{.PYTHON}} -m {{.PYTEST}} --cov=. --cov-report=html --cov-report=term"
+
+  test:coverage:new:
+    desc: Run tests with coverage for models only (MUST be ≥85%)
+    cmds:
+      - "{{.PYTHON}} -m {{.PYTEST}} purchase_orders/test_*.py orders/test_*.py --cov=purchase_orders --cov=orders --cov-report=term-missing --cov-fail-under={{.COVERAGE_MIN}}"
+    
+  test:watch:
+    desc: Run tests in watch mode
+    cmds:
+      - "{{.PYTHON}} -m {{.PYTEST}} -f"
+
+  check:
+    desc: Pre-commit checks (MUST run before commit)
+    deps:
+      - test:coverage
+    cmds:
+      - echo "✓ All checks passed!"
+
+  dev:
+    desc: Start development server
+    cmds:
+      - "{{.PYTHON}} manage.py runserver 0.0.0.0:8002"
+
+  migrate:
+    desc: Run database migrations
+    cmds:
+      - "{{.PYTHON}} manage.py migrate"
+
+  makemigrations:
+    desc: Create new migrations
+    cmds:
+      - "{{.PYTHON}} manage.py makemigrations"
+
+  shell:
+    desc: Start Django shell
+    cmds:
+      - "{{.PYTHON}} manage.py shell"
+
+  clean:
+    desc: Clean cache and build artifacts
+    cmds:
+      - find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+      - find . -type f -name "*.pyc" -delete
+      - rm -rf .pytest_cache htmlcov .coverage

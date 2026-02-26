@@ -106,9 +106,17 @@ class POAllocator:
             if result.remaining == 0:
                 break
             
-            # For now, available quantity = PO quantity
-            # TODO: In future, subtract quantities already ordered from this PO line
-            available_qty = po_line.quantity
+            # Calculate available quantity = PO quantity - already ordered quantity - waived quantity
+            from django.db.models import Sum
+            ordered_qty = po_line.orderlineitem_set.aggregate(
+                total=Sum('quantity')
+            )['total'] or 0
+            waived_qty = po_line.waived_quantity
+            available_qty = po_line.quantity - ordered_qty - waived_qty
+            
+            # Skip if no quantity available from this PO line
+            if available_qty <= 0:
+                continue
             
             # Determine how much to allocate from this PO line
             qty_to_allocate = min(available_qty, result.remaining)
@@ -148,15 +156,24 @@ class POAllocator:
             item: Item to check
         
         Returns:
-            Total available quantity
+            Total available quantity (PO quantity - already ordered)
         """
+        from django.db.models import Sum
+        
         po_lines = POLineItem.objects.filter(
             po__customer_id=self.customer_id,
             po__status='OPEN',
             item=item
         )
         
-        total = sum(po_line.quantity for po_line in po_lines)
-        # TODO: Subtract quantities already ordered
+        total = 0
+        for po_line in po_lines:
+            ordered_qty = po_line.orderlineitem_set.aggregate(
+                total=Sum('quantity')
+            )['total'] or 0
+            waived_qty = po_line.waived_quantity
+            available = po_line.quantity - ordered_qty - waived_qty
+            if available > 0:
+                total += available
         
         return total

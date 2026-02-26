@@ -119,3 +119,76 @@ class Attachment(models.Model):
     def is_spreadsheet(self):
         """Check if file is a spreadsheet."""
         return self.file_extension in ['xlsx', 'xls', 'csv']
+
+
+class AdminOverride(models.Model):
+    """
+    Log of all admin override actions.
+    
+    Tracks when admins bypass normal validation rules,
+    including who did it, why, and what entity was affected.
+    """
+    
+    ENTITY_TYPE_CHOICES = [
+        ('PO', 'Purchase Order'),
+        ('ORDER', 'Order'),
+        ('DELIVERY', 'Delivery'),
+    ]
+    
+    OVERRIDE_TYPE_CHOICES = [
+        ('CLOSE', 'Force Close'),
+        ('WAIVE', 'Waive Quantity'),
+        ('PRICE', 'Price Override'),
+        ('ALLOCATION', 'Allocation Override'),
+        ('OTHER', 'Other'),
+    ]
+    
+    entity_type = models.CharField(
+        max_length=20,
+        choices=ENTITY_TYPE_CHOICES,
+        help_text="Type of entity that was overridden"
+    )
+    entity_id = models.IntegerField(
+        help_text="ID of the PO/Order/Delivery"
+    )
+    entity_number = models.CharField(
+        max_length=50,
+        help_text="PO/Order/Delivery number for easy reference"
+    )
+    override_type = models.CharField(
+        max_length=20,
+        choices=OVERRIDE_TYPE_CHOICES,
+        help_text="Type of override performed"
+    )
+    reason = models.TextField(
+        help_text="Reason provided by admin for the override"
+    )
+    user_id = models.CharField(
+        max_length=255,
+        help_text="ID of admin user who performed the override (from Authinator)"
+    )
+    user_email = models.EmailField(
+        help_text="Email of admin user who performed the override",
+        blank=True,
+        default=''
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Additional context about the override"
+    )
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Admin Override'
+        verbose_name_plural = 'Admin Overrides'
+        indexes = [
+            models.Index(fields=['entity_type', 'entity_id']),
+            models.Index(fields=['user_id']),
+            models.Index(fields=['-created_at']),
+        ]
+    
+    def __str__(self):
+        """String representation of override."""
+        return f"{self.override_type} on {self.entity_type} {self.entity_number} by {self.user_id}"

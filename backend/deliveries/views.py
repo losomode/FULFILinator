@@ -10,6 +10,7 @@ from core.authentication import AuthinatorJWTAuthentication
 from core.permissions import IsSystemAdmin, CustomerDataIsolation
 from deliveries.models import Delivery, DeliveryLineItem
 from deliveries.serializers import DeliverySerializer, DeliveryLineItemSerializer
+from notifications.utils import send_delivery_shipped_email
 
 
 class DeliveryViewSet(viewsets.ModelViewSet):
@@ -26,18 +27,46 @@ class DeliveryViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        Get queryset with customer data isolation.
+        Get queryset with customer data isolation and filtering.
         System admins see all, customer users see only their own.
+        
+        Query params:
+        - customer_id: Filter by customer
+        - status: Filter by status (OPEN/CLOSED)
+        - ship_date_after: Filter deliveries shipped after this date
+        - ship_date_before: Filter deliveries shipped before this date
+        - tracking_number: Filter by tracking number (partial match)
         """
         user = self.request.user
         
         if user.is_system_admin():
-            return Delivery.objects.all().order_by('-created_at')
+            queryset = Delivery.objects.all()
         else:
             # Customer users only see their own customer's deliveries
-            return Delivery.objects.filter(
-                customer_id=user.customer_id
-            ).order_by('-created_at')
+            queryset = Delivery.objects.filter(customer_id=user.customer_id)
+        
+        # Apply filters from query params
+        customer_id = self.request.query_params.get('customer_id')
+        if customer_id and user.is_system_admin():
+            queryset = queryset.filter(customer_id=customer_id)
+        
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            queryset = queryset.filter(status=status_filter.upper())
+        
+        ship_date_after = self.request.query_params.get('ship_date_after')
+        if ship_date_after:
+            queryset = queryset.filter(ship_date__gte=ship_date_after)
+        
+        ship_date_before = self.request.query_params.get('ship_date_before')
+        if ship_date_before:
+            queryset = queryset.filter(ship_date__lte=ship_date_before)
+        
+        tracking_number = self.request.query_params.get('tracking_number')
+        if tracking_number:
+            queryset = queryset.filter(tracking_number__icontains=tracking_number)
+        
+        return queryset.order_by('-created_at')
     
     def get_permissions(self):
         """
@@ -71,6 +100,9 @@ class DeliveryViewSet(viewsets.ModelViewSet):
         delivery.closed_at = timezone.now()
         delivery.closed_by_user_id = request.user.id
         delivery.save()
+        
+        # Send email notification to customer
+        send_delivery_shipped_email(delivery)
         
         serializer = self.get_serializer(delivery)
         return Response(serializer.data)

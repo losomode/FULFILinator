@@ -1,0 +1,2311 @@
+openapi: 3.0.3
+info:
+  title: FULFILinator API
+  version: 1.0.0
+  description: Order fulfillment tracking system - Manages Purchase Orders, Orders,
+    and Deliveries with fulfillment visibility
+paths:
+  /api/fulfil/admin-overrides/:
+    get:
+      operationId: admin_overrides_list
+      description: |-
+        ViewSet for viewing admin override history (read-only).
+
+        Only system admins can access this endpoint.
+
+        Supports filtering by:
+        - entity_type: Filter by PO, ORDER, or DELIVERY
+        - entity_id: Filter by specific entity ID
+        - user_id: Filter by user who performed the override
+
+        Example:
+        - GET /api/fulfil/admin-overrides/
+        - GET /api/fulfil/admin-overrides/?entity_type=PO&entity_id=1
+        - GET /api/fulfil/admin-overrides/?user_id=123
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - admin-overrides
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAdminOverrideList'
+          description: ''
+  /api/fulfil/admin-overrides/{id}/:
+    get:
+      operationId: admin_overrides_retrieve
+      description: |-
+        ViewSet for viewing admin override history (read-only).
+
+        Only system admins can access this endpoint.
+
+        Supports filtering by:
+        - entity_type: Filter by PO, ORDER, or DELIVERY
+        - entity_id: Filter by specific entity ID
+        - user_id: Filter by user who performed the override
+
+        Example:
+        - GET /api/fulfil/admin-overrides/
+        - GET /api/fulfil/admin-overrides/?entity_type=PO&entity_id=1
+        - GET /api/fulfil/admin-overrides/?user_id=123
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Admin Override.
+        required: true
+      tags:
+      - admin-overrides
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOverride'
+          description: ''
+  /api/fulfil/attachments/:
+    get:
+      operationId: attachments_list
+      description: |-
+        ViewSet for managing attachments.
+
+        Supports:
+        - List: GET /api/fulfil/attachments/?content_type=PO&object_id=1
+        - Create: POST /api/fulfil/attachments/ (multipart/form-data)
+        - Retrieve: GET /api/fulfil/attachments/{id}/
+        - Delete: DELETE /api/fulfil/attachments/{id}/
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - attachments
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAttachmentList'
+          description: ''
+    post:
+      operationId: attachments_create
+      description: |-
+        ViewSet for managing attachments.
+
+        Supports:
+        - List: GET /api/fulfil/attachments/?content_type=PO&object_id=1
+        - Create: POST /api/fulfil/attachments/ (multipart/form-data)
+        - Retrieve: GET /api/fulfil/attachments/{id}/
+        - Delete: DELETE /api/fulfil/attachments/{id}/
+      tags:
+      - attachments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttachmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttachmentRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+          description: ''
+  /api/fulfil/attachments/{id}/:
+    get:
+      operationId: attachments_retrieve
+      description: |-
+        ViewSet for managing attachments.
+
+        Supports:
+        - List: GET /api/fulfil/attachments/?content_type=PO&object_id=1
+        - Create: POST /api/fulfil/attachments/ (multipart/form-data)
+        - Retrieve: GET /api/fulfil/attachments/{id}/
+        - Delete: DELETE /api/fulfil/attachments/{id}/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Attachment.
+        required: true
+      tags:
+      - attachments
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+          description: ''
+    put:
+      operationId: attachments_update
+      description: |-
+        ViewSet for managing attachments.
+
+        Supports:
+        - List: GET /api/fulfil/attachments/?content_type=PO&object_id=1
+        - Create: POST /api/fulfil/attachments/ (multipart/form-data)
+        - Retrieve: GET /api/fulfil/attachments/{id}/
+        - Delete: DELETE /api/fulfil/attachments/{id}/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Attachment.
+        required: true
+      tags:
+      - attachments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttachmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttachmentRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+          description: ''
+    patch:
+      operationId: attachments_partial_update
+      description: |-
+        ViewSet for managing attachments.
+
+        Supports:
+        - List: GET /api/fulfil/attachments/?content_type=PO&object_id=1
+        - Create: POST /api/fulfil/attachments/ (multipart/form-data)
+        - Retrieve: GET /api/fulfil/attachments/{id}/
+        - Delete: DELETE /api/fulfil/attachments/{id}/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Attachment.
+        required: true
+      tags:
+      - attachments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAttachmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAttachmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAttachmentRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+          description: ''
+    delete:
+      operationId: attachments_destroy
+      description: |-
+        ViewSet for managing attachments.
+
+        Supports:
+        - List: GET /api/fulfil/attachments/?content_type=PO&object_id=1
+        - Create: POST /api/fulfil/attachments/ (multipart/form-data)
+        - Retrieve: GET /api/fulfil/attachments/{id}/
+        - Delete: DELETE /api/fulfil/attachments/{id}/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Attachment.
+        required: true
+      tags:
+      - attachments
+      responses:
+        '204':
+          description: No response body
+  /api/fulfil/dashboard/alerts/:
+    get:
+      operationId: dashboard_alerts_retrieve
+      description: |-
+        Get dashboard alerts.
+
+        Returns actionable items:
+        - POs expiring soon (within 30 days)
+        - POs ready to close
+        - Orders ready to close
+
+        Filtered by user role.
+      tags:
+      - dashboard
+      responses:
+        '200':
+          description: No response body
+  /api/fulfil/dashboard/metrics/:
+    get:
+      operationId: dashboard_metrics_retrieve
+      description: |-
+        Get dashboard metrics.
+
+        Returns:
+        - PO metrics: open count, expiring soon, ready to close
+        - Order metrics: open count, ready to close
+        - Delivery metrics: open count, closed this month
+        - Fulfillment rates
+
+        Filtered by user role:
+        - System admins see all
+        - Customers see only their data
+      tags:
+      - dashboard
+      responses:
+        '200':
+          description: No response body
+  /api/fulfil/deliveries/:
+    get:
+      operationId: deliveries_list
+      description: |-
+        ViewSet for Delivery CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, search_serial (system admins only)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - deliveries
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeliveryList'
+          description: ''
+    post:
+      operationId: deliveries_create
+      description: |-
+        ViewSet for Delivery CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, search_serial (system admins only)
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+  /api/fulfil/deliveries/{id}/:
+    get:
+      operationId: deliveries_retrieve
+      description: |-
+        ViewSet for Delivery CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, search_serial (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - deliveries
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+    put:
+      operationId: deliveries_update
+      description: |-
+        ViewSet for Delivery CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, search_serial (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+    patch:
+      operationId: deliveries_partial_update
+      description: |-
+        ViewSet for Delivery CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, search_serial (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+    delete:
+      operationId: deliveries_destroy
+      description: |-
+        ViewSet for Delivery CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, search_serial (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - deliveries
+      responses:
+        '204':
+          description: No response body
+  /api/fulfil/deliveries/{id}/close/:
+    post:
+      operationId: deliveries_close_create
+      description: |-
+        Close a delivery.
+        Sets status to CLOSED, closed_at to now, and closed_by_user_id.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+  /api/fulfil/deliveries/search_serial/:
+    get:
+      operationId: deliveries_search_serial_retrieve
+      description: |-
+        Search for a delivery by serial number.
+
+        Query params:
+        - serial_number: The serial number to search for
+
+        Returns the delivery line item and parent delivery.
+      tags:
+      - deliveries
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+  /api/fulfil/health/:
+    get:
+      operationId: health_retrieve
+      description: |-
+        Health check endpoint to verify the service is running.
+        Returns 200 OK with service information.
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/fulfil/items/:
+    get:
+      operationId: items_list
+      description: |-
+        ViewSet for Item CRUD operations.
+
+        - List/Retrieve: All authenticated users
+        - Create/Update/Delete: System admins only
+      tags:
+      - items
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+          description: ''
+    post:
+      operationId: items_create
+      description: |-
+        ViewSet for Item CRUD operations.
+
+        - List/Retrieve: All authenticated users
+        - Create/Update/Delete: System admins only
+      tags:
+      - items
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+  /api/fulfil/items/{id}/:
+    get:
+      operationId: items_retrieve
+      description: |-
+        ViewSet for Item CRUD operations.
+
+        - List/Retrieve: All authenticated users
+        - Create/Update/Delete: System admins only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Item.
+        required: true
+      tags:
+      - items
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+    put:
+      operationId: items_update
+      description: |-
+        ViewSet for Item CRUD operations.
+
+        - List/Retrieve: All authenticated users
+        - Create/Update/Delete: System admins only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Item.
+        required: true
+      tags:
+      - items
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+    patch:
+      operationId: items_partial_update
+      description: |-
+        ViewSet for Item CRUD operations.
+
+        - List/Retrieve: All authenticated users
+        - Create/Update/Delete: System admins only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Item.
+        required: true
+      tags:
+      - items
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedItemRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+    delete:
+      operationId: items_destroy
+      description: |-
+        ViewSet for Item CRUD operations.
+
+        - List/Retrieve: All authenticated users
+        - Create/Update/Delete: System admins only
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Item.
+        required: true
+      tags:
+      - items
+      responses:
+        '204':
+          description: No response body
+  /api/fulfil/orders/:
+    get:
+      operationId: orders_list
+      description: |-
+        ViewSet for Order CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - orders
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrderList'
+          description: ''
+    post:
+      operationId: orders_create
+      description: |-
+        ViewSet for Order CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/fulfil/orders/{id}/:
+    get:
+      operationId: orders_retrieve
+      description: |-
+        ViewSet for Order CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    put:
+      operationId: orders_update
+      description: |-
+        ViewSet for Order CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    patch:
+      operationId: orders_partial_update
+      description: |-
+        ViewSet for Order CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    delete:
+      operationId: orders_destroy
+      description: |-
+        ViewSet for Order CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      responses:
+        '204':
+          description: No response body
+  /api/fulfil/orders/{id}/close/:
+    post:
+      operationId: orders_close_create
+      description: |-
+        Close an order.
+        Sets status to CLOSED, closed_at to now, and closed_by_user_id.
+        Validates that Order is ready to close (all items delivered or waived).
+        Admin can force close with override flag.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/fulfil/orders/{id}/waive/:
+    post:
+      operationId: orders_waive_create
+      description: |-
+        Waive remaining quantity for a line item.
+
+        Expected payload:
+        {
+            "line_item_id": <int>,
+            "quantity_to_waive": <int>,
+            "reason": <string> (optional but recommended)
+        }
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/fulfil/purchase-orders/:
+    get:
+      operationId: purchase_orders_list
+      description: |-
+        ViewSet for PurchaseOrder CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - purchase-orders
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPurchaseOrderList'
+          description: ''
+    post:
+      operationId: purchase_orders_create
+      description: |-
+        ViewSet for PurchaseOrder CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      tags:
+      - purchase-orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+          description: ''
+  /api/fulfil/purchase-orders/{id}/:
+    get:
+      operationId: purchase_orders_retrieve
+      description: |-
+        ViewSet for PurchaseOrder CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - purchase-orders
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+          description: ''
+    put:
+      operationId: purchase_orders_update
+      description: |-
+        ViewSet for PurchaseOrder CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - purchase-orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+          description: ''
+    patch:
+      operationId: purchase_orders_partial_update
+      description: |-
+        ViewSet for PurchaseOrder CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - purchase-orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPurchaseOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPurchaseOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPurchaseOrderRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+          description: ''
+    delete:
+      operationId: purchase_orders_destroy
+      description: |-
+        ViewSet for PurchaseOrder CRUD operations.
+
+        - List/Retrieve: All authenticated users (with customer data isolation)
+        - Create/Update/Delete: System admins only
+        - Custom actions: close, waive (system admins only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - purchase-orders
+      responses:
+        '204':
+          description: No response body
+  /api/fulfil/purchase-orders/{id}/close/:
+    post:
+      operationId: purchase_orders_close_create
+      description: |-
+        Close a purchase order.
+        Sets status to CLOSED, closed_at to now, and closed_by_user_id.
+        Validates that PO is ready to close (all items fulfilled or waived).
+        Admin can force close with override flag.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - purchase-orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+          description: ''
+  /api/fulfil/purchase-orders/{id}/waive/:
+    post:
+      operationId: purchase_orders_waive_create
+      description: |-
+        Waive remaining quantity for a line item.
+
+        Expected payload:
+        {
+            "line_item_id": <int>,
+            "quantity_to_waive": <int>,
+            "reason": <string> (optional but recommended)
+        }
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - purchase-orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+          description: ''
+components:
+  schemas:
+    AdminOverride:
+      type: object
+      description: Serializer for AdminOverride model (read-only).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        entity_type:
+          allOf:
+          - $ref: '#/components/schemas/EntityTypeEnum'
+          description: |-
+            Type of entity that was overridden
+
+            * `PO` - Purchase Order
+            * `ORDER` - Order
+            * `DELIVERY` - Delivery
+        entity_type_display:
+          type: string
+          readOnly: true
+        entity_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: ID of the PO/Order/Delivery
+        entity_number:
+          type: string
+          description: PO/Order/Delivery number for easy reference
+          maxLength: 50
+        override_type:
+          allOf:
+          - $ref: '#/components/schemas/OverrideTypeEnum'
+          description: |-
+            Type of override performed
+
+            * `CLOSE` - Force Close
+            * `WAIVE` - Waive Quantity
+            * `PRICE` - Price Override
+            * `ALLOCATION` - Allocation Override
+            * `OTHER` - Other
+        override_type_display:
+          type: string
+          readOnly: true
+        reason:
+          type: string
+          description: Reason provided by admin for the override
+        user_id:
+          type: string
+          description: ID of admin user who performed the override (from Authinator)
+          maxLength: 255
+        user_email:
+          type: string
+          format: email
+          description: Email of admin user who performed the override
+          maxLength: 254
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        metadata:
+          description: Additional context about the override
+      required:
+      - created_at
+      - entity_id
+      - entity_number
+      - entity_type
+      - entity_type_display
+      - id
+      - override_type
+      - override_type_display
+      - reason
+      - user_id
+    Attachment:
+      type: object
+      description: Serializer for Attachment model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        content_type:
+          allOf:
+          - $ref: '#/components/schemas/ContentTypeEnum'
+          description: |-
+            Type of entity this attachment belongs to
+
+            * `PO` - Purchase Order
+            * `ORDER` - Order
+            * `DELIVERY` - Delivery
+        object_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: ID of the PO/Order/Delivery
+        file:
+          type: string
+          format: uri
+          description: Uploaded file
+          pattern: (?:pdf|png|jpg|jpeg|gif|bmp|xlsx|xls|csv|doc|docx|txt)$
+        filename:
+          type: string
+          readOnly: true
+          description: Original filename
+        file_size:
+          type: integer
+          readOnly: true
+          description: File size in bytes
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+        uploaded_by_user_id:
+          type: string
+          readOnly: true
+          description: ID of user who uploaded this file (from Authinator)
+        file_extension:
+          type: string
+          readOnly: true
+        file_size_mb:
+          type: string
+          readOnly: true
+        is_image:
+          type: string
+          readOnly: true
+        is_pdf:
+          type: string
+          readOnly: true
+        is_spreadsheet:
+          type: string
+          readOnly: true
+      required:
+      - content_type
+      - file
+      - file_extension
+      - file_size
+      - file_size_mb
+      - filename
+      - id
+      - is_image
+      - is_pdf
+      - is_spreadsheet
+      - object_id
+      - uploaded_at
+      - uploaded_by_user_id
+    AttachmentRequest:
+      type: object
+      description: Serializer for Attachment model.
+      properties:
+        content_type:
+          allOf:
+          - $ref: '#/components/schemas/ContentTypeEnum'
+          description: |-
+            Type of entity this attachment belongs to
+
+            * `PO` - Purchase Order
+            * `ORDER` - Order
+            * `DELIVERY` - Delivery
+        object_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: ID of the PO/Order/Delivery
+        file:
+          type: string
+          format: binary
+          description: Uploaded file
+          pattern: (?:pdf|png|jpg|jpeg|gif|bmp|xlsx|xls|csv|doc|docx|txt)$
+      required:
+      - content_type
+      - file
+      - object_id
+    ContentTypeEnum:
+      enum:
+      - PO
+      - ORDER
+      - DELIVERY
+      type: string
+      description: |-
+        * `PO` - Purchase Order
+        * `ORDER` - Order
+        * `DELIVERY` - Delivery
+    Delivery:
+      type: object
+      description: Serializer for Delivery with nested line items.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        delivery_number:
+          type: string
+          readOnly: true
+          description: Auto-generated delivery number (DEL-YYYYMMDD-XXXX)
+        customer_id:
+          type: string
+          description: ID of customer (from Authinator)
+          maxLength: 255
+        customer_name:
+          type: string
+          readOnly: true
+        ship_date:
+          type: string
+          format: date
+          description: Date the items were shipped
+        tracking_number:
+          type: string
+          description: Carrier tracking number
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            Delivery status
+
+            * `OPEN` - Open
+            * `CLOSED` - Closed
+        notes:
+          type: string
+          description: Notes about this delivery
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_user_id:
+          type: string
+          readOnly: true
+        closed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: When this delivery was closed
+        closed_by_user_id:
+          type: string
+          readOnly: true
+          nullable: true
+          description: ID of user who closed this delivery
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryLineItem'
+      required:
+      - closed_at
+      - closed_by_user_id
+      - created_at
+      - created_by_user_id
+      - customer_id
+      - customer_name
+      - delivery_number
+      - id
+      - ship_date
+      - tracking_number
+      - updated_at
+    DeliveryLineItem:
+      type: object
+      description: Serializer for DeliveryLineItem.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        item:
+          type: integer
+          description: Item being delivered
+        item_name:
+          type: string
+          readOnly: true
+        item_version:
+          type: string
+          readOnly: true
+        serial_number:
+          type: string
+          description: Unique serial number for this physical item
+          maxLength: 255
+        price_per_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Price per unit (from Order or overridden)
+        order_line_item:
+          type: integer
+          nullable: true
+          description: Order line item this delivery fulfills
+        order_number:
+          type: string
+          readOnly: true
+        notes:
+          type: string
+          description: Notes about this line item
+        override_reason:
+          type: string
+          nullable: true
+          description: Reason if price was overridden
+      required:
+      - id
+      - item
+      - item_name
+      - item_version
+      - order_number
+      - price_per_unit
+      - serial_number
+    DeliveryLineItemRequest:
+      type: object
+      description: Serializer for DeliveryLineItem.
+      properties:
+        item:
+          type: integer
+          description: Item being delivered
+        serial_number:
+          type: string
+          minLength: 1
+          description: Unique serial number for this physical item
+          maxLength: 255
+        price_per_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Price per unit (from Order or overridden)
+        order_line_item:
+          type: integer
+          nullable: true
+          description: Order line item this delivery fulfills
+        notes:
+          type: string
+          description: Notes about this line item
+        override_reason:
+          type: string
+          nullable: true
+          description: Reason if price was overridden
+        admin_override:
+          type: boolean
+          writeOnly: true
+          default: false
+      required:
+      - item
+      - price_per_unit
+      - serial_number
+    DeliveryRequest:
+      type: object
+      description: Serializer for Delivery with nested line items.
+      properties:
+        customer_id:
+          type: string
+          minLength: 1
+          description: ID of customer (from Authinator)
+          maxLength: 255
+        ship_date:
+          type: string
+          format: date
+          description: Date the items were shipped
+        tracking_number:
+          type: string
+          minLength: 1
+          description: Carrier tracking number
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            Delivery status
+
+            * `OPEN` - Open
+            * `CLOSED` - Closed
+        notes:
+          type: string
+          description: Notes about this delivery
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryLineItemRequest'
+      required:
+      - customer_id
+      - ship_date
+      - tracking_number
+    EntityTypeEnum:
+      enum:
+      - PO
+      - ORDER
+      - DELIVERY
+      type: string
+      description: |-
+        * `PO` - Purchase Order
+        * `ORDER` - Order
+        * `DELIVERY` - Delivery
+    Item:
+      type: object
+      description: Serializer for Item model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Product name (e.g., 'Camera LR', 'Node 4.6')
+          maxLength: 255
+        version:
+          type: string
+          description: Product version (e.g., '1.0', '4.6 GA')
+          maxLength: 50
+        description:
+          type: string
+          description: Product description
+        msrp:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Manufacturer's Suggested Retail Price (list price)
+        min_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Minimum price (reference only, not enforced)
+        created_by_user_id:
+          type: string
+          readOnly: true
+          description: ID of user who created this item (from Authinator)
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by_user_id
+      - id
+      - min_price
+      - msrp
+      - name
+      - updated_at
+    ItemRequest:
+      type: object
+      description: Serializer for Item model.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Product name (e.g., 'Camera LR', 'Node 4.6')
+          maxLength: 255
+        version:
+          type: string
+          description: Product version (e.g., '1.0', '4.6 GA')
+          maxLength: 50
+        description:
+          type: string
+          description: Product description
+        msrp:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Manufacturer's Suggested Retail Price (list price)
+        min_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Minimum price (reference only, not enforced)
+      required:
+      - min_price
+      - msrp
+      - name
+    Order:
+      type: object
+      description: Serializer for Order with nested line items.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        order_number:
+          type: string
+          readOnly: true
+          description: Auto-generated order number (ORD-YYYYMMDD-XXXX)
+        customer_id:
+          type: string
+          description: ID of customer (from Authinator)
+          maxLength: 255
+        customer_name:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            Order status
+
+            * `OPEN` - Open
+            * `CLOSED` - Closed
+        notes:
+          type: string
+          description: Notes about this order
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_user_id:
+          type: string
+          readOnly: true
+        closed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: When this order was closed
+        closed_by_user_id:
+          type: string
+          readOnly: true
+          nullable: true
+          description: ID of user who closed this order
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLineItem'
+        fulfillment_status:
+          type: string
+          readOnly: true
+      required:
+      - closed_at
+      - closed_by_user_id
+      - created_at
+      - created_by_user_id
+      - customer_id
+      - customer_name
+      - fulfillment_status
+      - id
+      - order_number
+      - updated_at
+    OrderLineItem:
+      type: object
+      description: Serializer for OrderLineItem.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        item:
+          type: integer
+          description: Item being ordered
+        item_name:
+          type: string
+          readOnly: true
+        item_version:
+          type: string
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Quantity ordered
+        price_per_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Price per unit (from PO or overridden)
+        po_line_item:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: PO line item this order fulfills from (null for ad-hoc)
+        po_number:
+          type: string
+          readOnly: true
+        notes:
+          type: string
+          description: Notes about this line item
+        override_reason:
+          type: string
+          nullable: true
+          description: Reason if price or quantity was overridden
+      required:
+      - id
+      - item
+      - item_name
+      - item_version
+      - po_line_item
+      - po_number
+      - price_per_unit
+      - quantity
+    OrderLineItemRequest:
+      type: object
+      description: Serializer for OrderLineItem.
+      properties:
+        item:
+          type: integer
+          description: Item being ordered
+        quantity:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Quantity ordered
+        price_per_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Price per unit (from PO or overridden)
+        notes:
+          type: string
+          description: Notes about this line item
+        override_reason:
+          type: string
+          nullable: true
+          description: Reason if price or quantity was overridden
+        admin_override:
+          type: boolean
+          writeOnly: true
+          default: false
+      required:
+      - item
+      - price_per_unit
+      - quantity
+    OrderRequest:
+      type: object
+      description: Serializer for Order with nested line items.
+      properties:
+        customer_id:
+          type: string
+          minLength: 1
+          description: ID of customer (from Authinator)
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            Order status
+
+            * `OPEN` - Open
+            * `CLOSED` - Closed
+        notes:
+          type: string
+          description: Notes about this order
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLineItemRequest'
+        allocate_from_po:
+          type: boolean
+          writeOnly: true
+          default: true
+      required:
+      - customer_id
+    OverrideTypeEnum:
+      enum:
+      - CLOSE
+      - WAIVE
+      - PRICE
+      - ALLOCATION
+      - OTHER
+      type: string
+      description: |-
+        * `CLOSE` - Force Close
+        * `WAIVE` - Waive Quantity
+        * `PRICE` - Price Override
+        * `ALLOCATION` - Allocation Override
+        * `OTHER` - Other
+    POLineItem:
+      type: object
+      description: Serializer for POLineItem.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        item:
+          type: integer
+          description: Item being ordered
+        item_name:
+          type: string
+          readOnly: true
+        item_version:
+          type: string
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Quantity ordered
+        price_per_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Negotiated price per unit
+        notes:
+          type: string
+          description: Notes about this line item
+      required:
+      - id
+      - item
+      - item_name
+      - item_version
+      - price_per_unit
+      - quantity
+    POLineItemRequest:
+      type: object
+      description: Serializer for POLineItem.
+      properties:
+        item:
+          type: integer
+          description: Item being ordered
+        quantity:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Quantity ordered
+        price_per_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Negotiated price per unit
+        notes:
+          type: string
+          description: Notes about this line item
+        admin_override:
+          type: boolean
+          writeOnly: true
+          default: false
+      required:
+      - item
+      - price_per_unit
+      - quantity
+    PaginatedAdminOverrideList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminOverride'
+    PaginatedAttachmentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+    PaginatedDeliveryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Delivery'
+    PaginatedOrderList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+    PaginatedPurchaseOrderList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseOrder'
+    PatchedAttachmentRequest:
+      type: object
+      description: Serializer for Attachment model.
+      properties:
+        content_type:
+          allOf:
+          - $ref: '#/components/schemas/ContentTypeEnum'
+          description: |-
+            Type of entity this attachment belongs to
+
+            * `PO` - Purchase Order
+            * `ORDER` - Order
+            * `DELIVERY` - Delivery
+        object_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: ID of the PO/Order/Delivery
+        file:
+          type: string
+          format: binary
+          description: Uploaded file
+          pattern: (?:pdf|png|jpg|jpeg|gif|bmp|xlsx|xls|csv|doc|docx|txt)$
+    PatchedDeliveryRequest:
+      type: object
+      description: Serializer for Delivery with nested line items.
+      properties:
+        customer_id:
+          type: string
+          minLength: 1
+          description: ID of customer (from Authinator)
+          maxLength: 255
+        ship_date:
+          type: string
+          format: date
+          description: Date the items were shipped
+        tracking_number:
+          type: string
+          minLength: 1
+          description: Carrier tracking number
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            Delivery status
+
+            * `OPEN` - Open
+            * `CLOSED` - Closed
+        notes:
+          type: string
+          description: Notes about this delivery
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryLineItemRequest'
+    PatchedItemRequest:
+      type: object
+      description: Serializer for Item model.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Product name (e.g., 'Camera LR', 'Node 4.6')
+          maxLength: 255
+        version:
+          type: string
+          description: Product version (e.g., '1.0', '4.6 GA')
+          maxLength: 50
+        description:
+          type: string
+          description: Product description
+        msrp:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Manufacturer's Suggested Retail Price (list price)
+        min_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Minimum price (reference only, not enforced)
+    PatchedOrderRequest:
+      type: object
+      description: Serializer for Order with nested line items.
+      properties:
+        customer_id:
+          type: string
+          minLength: 1
+          description: ID of customer (from Authinator)
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            Order status
+
+            * `OPEN` - Open
+            * `CLOSED` - Closed
+        notes:
+          type: string
+          description: Notes about this order
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLineItemRequest'
+        allocate_from_po:
+          type: boolean
+          writeOnly: true
+          default: true
+    PatchedPurchaseOrderRequest:
+      type: object
+      description: Serializer for PurchaseOrder with nested line items.
+      properties:
+        customer_id:
+          type: string
+          minLength: 1
+          description: ID of customer (from Authinator)
+          maxLength: 255
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date PO was signed/agreed
+        expiration_date:
+          type: string
+          format: date
+          nullable: true
+          description: Target fulfillment deadline
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            PO status
+
+            * `OPEN` - Open
+            * `CLOSED` - Closed
+        notes:
+          type: string
+          description: Notes about this PO
+        google_doc_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Google Doc URL reference
+          maxLength: 200
+        hubspot_url:
+          type: string
+          format: uri
+          nullable: true
+          description: HubSpot URL/ID reference
+          maxLength: 200
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/POLineItemRequest'
+    PurchaseOrder:
+      type: object
+      description: Serializer for PurchaseOrder with nested line items.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        po_number:
+          type: string
+          readOnly: true
+          description: Auto-generated PO number (PO-YYYYMMDD-XXXX)
+        customer_id:
+          type: string
+          description: ID of customer (from Authinator)
+          maxLength: 255
+        customer_name:
+          type: string
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date PO was signed/agreed
+        expiration_date:
+          type: string
+          format: date
+          nullable: true
+          description: Target fulfillment deadline
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            PO status
+
+            * `OPEN` - Open
+            * `CLOSED` - Closed
+        notes:
+          type: string
+          description: Notes about this PO
+        google_doc_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Google Doc URL reference
+          maxLength: 200
+        hubspot_url:
+          type: string
+          format: uri
+          nullable: true
+          description: HubSpot URL/ID reference
+          maxLength: 200
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_user_id:
+          type: string
+          readOnly: true
+        closed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: When this PO was closed
+        closed_by_user_id:
+          type: string
+          readOnly: true
+          nullable: true
+          description: ID of user who closed this PO
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/POLineItem'
+        fulfillment_status:
+          type: string
+          readOnly: true
+      required:
+      - closed_at
+      - closed_by_user_id
+      - created_at
+      - created_by_user_id
+      - customer_id
+      - customer_name
+      - fulfillment_status
+      - id
+      - po_number
+      - updated_at
+    PurchaseOrderRequest:
+      type: object
+      description: Serializer for PurchaseOrder with nested line items.
+      properties:
+        customer_id:
+          type: string
+          minLength: 1
+          description: ID of customer (from Authinator)
+          maxLength: 255
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date PO was signed/agreed
+        expiration_date:
+          type: string
+          format: date
+          nullable: true
+          description: Target fulfillment deadline
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          description: |-
+            PO status
+
+            * `OPEN` - Open
+            * `CLOSED` - Closed
+        notes:
+          type: string
+          description: Notes about this PO
+        google_doc_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Google Doc URL reference
+          maxLength: 200
+        hubspot_url:
+          type: string
+          format: uri
+          nullable: true
+          description: HubSpot URL/ID reference
+          maxLength: 200
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/POLineItemRequest'
+      required:
+      - customer_id
+    StatusEnum:
+      enum:
+      - OPEN
+      - CLOSED
+      type: string
+      description: |-
+        * `OPEN` - Open
+        * `CLOSED` - Closed

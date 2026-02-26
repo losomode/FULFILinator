@@ -86,6 +86,13 @@ class PurchaseOrder(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Purchase Order'
         verbose_name_plural = 'Purchase Orders'
+        indexes = [
+            models.Index(fields=['customer_id']),
+            models.Index(fields=['status']),
+            models.Index(fields=['start_date']),
+            models.Index(fields=['expiration_date']),
+            models.Index(fields=['-created_at']),
+        ]
     
     def save(self, *args, **kwargs):
         """
@@ -122,6 +129,79 @@ class PurchaseOrder(models.Model):
         
         return f'{prefix}{new_seq:04d}'
     
+    def get_fulfillment_status(self):
+        """
+        Calculate fulfillment status for this PO.
+        
+        Returns dict with:
+        - line_items: list of dicts with original/ordered/remaining per item
+        - orders: list of order numbers that fulfilled from this PO
+        """
+        from django.db.models import Sum
+        
+        line_items_status = []
+        orders_dict = {}  # Use dict to avoid duplicates
+        
+        for line_item in self.line_items.select_related('item').all():
+            # Calculate ordered quantity from OrderLineItems that reference this PO line item
+            ordered_qty = line_item.orderlineitem_set.aggregate(
+                total=Sum('quantity')
+            )['total'] or 0
+            
+            waived_qty = line_item.waived_quantity
+            remaining_qty = line_item.quantity - ordered_qty - waived_qty
+            
+            line_items_status.append({
+                'line_item_id': line_item.id,
+                'item_id': line_item.item.id,
+                'item_name': str(line_item.item),
+                'original_quantity': line_item.quantity,
+                'ordered_quantity': ordered_qty,
+                'waived_quantity': waived_qty,
+                'remaining_quantity': remaining_qty,
+                'price_per_unit': str(line_item.price_per_unit),
+            })
+            
+            # Collect orders that reference this line item
+            for order_line_item in line_item.orderlineitem_set.select_related('order').all():
+                order = order_line_item.order
+                orders_dict[order.id] = {
+                    'order_id': order.id,
+                    'order_number': order.order_number,
+                }
+        
+        return {
+            'line_items': line_items_status,
+            'orders': list(orders_dict.values()),
+        }
+    
+    def is_ready_to_close(self) -> bool:
+        """
+        Check if PO is ready to be closed.
+        
+        PO is ready when all line items are either:
+        - Fully ordered (ordered_qty = original_qty)
+        - Fully waived (waived_qty = original_qty)
+        - Combination (ordered_qty + waived_qty = original_qty)
+        
+        Returns:
+            True if ready to close, False otherwise
+        """
+        from django.db.models import Sum
+        
+        for line_item in self.line_items.all():
+            ordered_qty = line_item.orderlineitem_set.aggregate(
+                total=Sum('quantity')
+            )['total'] or 0
+            
+            waived_qty = line_item.waived_quantity
+            remaining_qty = line_item.quantity - ordered_qty - waived_qty
+            
+            if remaining_qty > 0:
+                return False
+        
+        return True
+    
     def __str__(self):
         """String representation of PO."""
         return self.po_number
@@ -153,6 +233,11 @@ class POLineItem(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))],
         help_text="Negotiated price per unit"
+    )
+    waived_quantity = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0)],
+        help_text="Quantity waived by admin (will not be fulfilled)"
     )
     notes = models.TextField(
         blank=True,

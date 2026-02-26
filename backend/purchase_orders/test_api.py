@@ -344,17 +344,18 @@ class PurchaseOrderAPITestCase(TestCase):
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         fulfillment = response.data['fulfillment_status']
-        self.assertEqual(len(fulfillment), 2)
+        line_items = fulfillment['line_items']
+        self.assertEqual(len(line_items), 2)
         
         # Find items in fulfillment status
-        item1_status = next(f for f in fulfillment if f['item_id'] == self.item1.id)
-        item2_status = next(f for f in fulfillment if f['item_id'] == self.item2.id)
+        item1_status = next(f for f in line_items if f['item_id'] == self.item1.id)
+        item2_status = next(f for f in line_items if f['item_id'] == self.item2.id)
         
-        self.assertEqual(item1_status['po_quantity'], 10)
+        self.assertEqual(item1_status['original_quantity'], 10)
         self.assertEqual(item1_status['ordered_quantity'], 0)
         self.assertEqual(item1_status['remaining_quantity'], 10)
         
-        self.assertEqual(item2_status['po_quantity'], 5)
+        self.assertEqual(item2_status['original_quantity'], 5)
         self.assertEqual(item2_status['ordered_quantity'], 0)
         self.assertEqual(item2_status['remaining_quantity'], 5)
     

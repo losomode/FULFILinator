@@ -25,9 +25,9 @@ The system is designed to work alongside the existing RMAinator application, sha
 **Technology Stack:**
 - Backend: Python + Django + Django REST Framework
 - Frontend: React (unified SPA)
-- Database: SQLite (per service)
-- Authentication: SSO, 2FA, WebAuthn (shared service)
-- Deployment: Docker Compose with nginx API gateway
+- Database: SQLite (development), PostgreSQL (production)
+- Authentication: JWT via Authinator microservice
+- Deployment: Simple microservice deployment (Gunicorn + nginx)
 - API: REST with JWT authentication
 
 ---

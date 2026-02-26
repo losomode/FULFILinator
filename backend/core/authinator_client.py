@@ -83,6 +83,49 @@ class AuthinatorClient:
         """
         user = self.get_user_from_token(token)
         return user is not None
+    
+    def get_customer(self, customer_id):
+        """
+        Fetch customer information from Authinator.
+        
+        Args:
+            customer_id (str): Customer ID
+        
+        Returns:
+            dict: Customer information including id, name, contact_email
+            None: If customer not found or request fails
+        """
+        # Return None for empty/None customer_id
+        if not customer_id:
+            return None
+        
+        # Check cache first (cache for 1 hour)
+        cache_key = f'authinator_customer_{customer_id}'
+        cached_customer = cache.get(cache_key)
+        if cached_customer:
+            return cached_customer
+        
+        try:
+            response = requests.get(
+                f'{self.api_url}customers/{customer_id}/',
+                verify=self.verify_ssl,
+                timeout=5
+            )
+            
+            if response.status_code == 200:
+                customer_data = response.json()
+                
+                # Cache the result for 1 hour
+                cache.set(cache_key, customer_data, 3600)
+                
+                return customer_data
+            else:
+                logger.warning(f'Failed to fetch customer {customer_id} from Authinator: {response.status_code}')
+                return None
+                
+        except Exception as e:
+            logger.error(f'Error fetching customer from Authinator: {e}')
+            return None
 
 
 # Singleton instance

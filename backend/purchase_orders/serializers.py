@@ -4,6 +4,7 @@ Serializers for purchase_orders app.
 from rest_framework import serializers
 from items.models import Item
 from purchase_orders.models import PurchaseOrder, POLineItem
+from core.authinator_client import authinator_client
 
 
 class POLineItemSerializer(serializers.ModelSerializer):
@@ -57,6 +58,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     
     line_items = POLineItemSerializer(many=True, required=False)
     fulfillment_status = serializers.SerializerMethodField()
+    customer_name = serializers.SerializerMethodField()
     created_by_user_id = serializers.CharField(read_only=True)
     
     class Meta:
@@ -65,6 +67,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             'id',
             'po_number',
             'customer_id',
+            'customer_name',
             'start_date',
             'expiration_date',
             'status',
@@ -90,28 +93,35 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             'fulfillment_status'
         ]
     
+    def get_customer_name(self, obj):
+        """
+        Get customer name from AUTHinator.
+        """
+        customer_data = authinator_client.get_customer(obj.customer_id)
+        return customer_data['name'] if customer_data else None
+    
     def get_fulfillment_status(self, obj):
         """
-        Calculate fulfillment status for each line item.
-        Returns list of dicts with item_id, po_quantity, ordered_quantity, remaining_quantity.
+        Get fulfillment status from model method.
+        Returns dict with line_items breakdown and list of orders.
         """
-        fulfillment = []
+        return obj.get_fulfillment_status()
+    
+    def validate(self, data):
+        """
+        Validate PurchaseOrder data.
+        """
+        start_date = data.get('start_date')
+        expiration_date = data.get('expiration_date')
         
-        for line_item in obj.line_items.all():
-            # For now, ordered_quantity is 0 since orders app not implemented yet
-            # TODO: Calculate from orders.models.Order when implemented
-            ordered_quantity = 0
-            
-            fulfillment.append({
-                'item_id': line_item.item.id,
-                'item_name': line_item.item.name,
-                'item_version': line_item.item.version,
-                'po_quantity': line_item.quantity,
-                'ordered_quantity': ordered_quantity,
-                'remaining_quantity': line_item.quantity - ordered_quantity
-            })
+        # If both dates provided, validate expiration is after start
+        if start_date and expiration_date:
+            if expiration_date < start_date:
+                raise serializers.ValidationError({
+                    'expiration_date': 'Expiration date must be after start date.'
+                })
         
-        return fulfillment
+        return data
     
     def create(self, validated_data):
         """Create PurchaseOrder with nested line items."""
