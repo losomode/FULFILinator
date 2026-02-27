@@ -19,6 +19,25 @@ import { deliveriesApi } from '../../api/deliveries';
 import { itemsApi } from '../../api/items';
 import { ordersApi } from '../../api/orders';
 
+const mockOrders = [
+  {
+    id: 1, order_number: 'ORD-001', customer_id: 'cust-123', status: 'OPEN',
+    line_items: [{ id: 10, item: 1, item_name: 'Camera 1.0', quantity: 5, price_per_unit: '999' }],
+  },
+  {
+    id: 2, order_number: 'ORD-002', customer_id: 'cust-123', status: 'OPEN',
+    line_items: [{ id: 20, item: 1, item_name: 'Camera 1.0', quantity: 3, price_per_unit: '899' }],
+  },
+];
+
+/** Helper: add an order group, select an order, and optionally add an item. */
+const addOrderWithItem = async (orderValue = '1') => {
+  fireEvent.click(screen.getByText('Add Order'));
+  fireEvent.change(screen.getByTestId('order-select-0'), { target: { value: orderValue } });
+  await waitFor(() => expect(screen.getByText('Add Item')).toBeInTheDocument());
+  fireEvent.click(screen.getByText('Add Item'));
+};
+
 describe('DeliveryForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -32,14 +51,14 @@ describe('DeliveryForm', () => {
   it('renders create mode', async () => {
     render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
-    expect(screen.getByText('Line Items (with Serial Numbers)')).toBeInTheDocument();
+    expect(screen.getByText('Orders & Items')).toBeInTheDocument();
   });
 
   it('renders edit mode', async () => {
     mockParams = { id: '1' };
     vi.mocked(deliveriesApi.get).mockResolvedValue({
       id: 1, customer_id: 'C1', ship_date: '2026-01-15', tracking_number: 'T1',
-      status: 'OPEN', line_items: [{ item: 1, serial_number: 'SN1', price_per_unit: '9' }],
+      status: 'OPEN', line_items: [{ item: 1, serial_number: 'SN1', price_per_unit: '9', order_number: 'ORD-001' }],
     } as any);
 
     render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
@@ -59,15 +78,34 @@ describe('DeliveryForm', () => {
     await waitFor(() => expect(screen.getByText('Failed to load items')).toBeInTheDocument());
   });
 
-  it('adds and removes line items', async () => {
+  it('adds and removes order groups', async () => {
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
     render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
 
-    expect(screen.getByText(/No line items/)).toBeInTheDocument();
+    expect(screen.getByText(/No orders added/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Add Order'));
+    expect(screen.queryByText(/No orders added/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Remove Order'));
+    expect(screen.getByText(/No orders added/)).toBeInTheDocument();
+  });
+
+  it('adds and removes items within an order group', async () => {
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
+    render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('Add Order'));
+    fireEvent.change(screen.getByTestId('order-select-0'), { target: { value: '1' } });
+
+    await waitFor(() => expect(screen.getByText('Add Item')).toBeInTheDocument());
+    expect(screen.getByText(/No items yet/)).toBeInTheDocument();
+
     fireEvent.click(screen.getByText('Add Item'));
-    expect(screen.queryByText(/No line items/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No items yet/)).not.toBeInTheDocument();
+
     fireEvent.click(screen.getByText('Remove'));
-    expect(screen.getByText(/No line items/)).toBeInTheDocument();
+    expect(screen.getByText(/No items yet/)).toBeInTheDocument();
   });
 
   it('validates line items required', async () => {
@@ -79,10 +117,14 @@ describe('DeliveryForm', () => {
   });
 
   it('validates duplicate serial numbers', async () => {
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
     render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
 
-    // Add two line items with same serial
+    fireEvent.click(screen.getByText('Add Order'));
+    fireEvent.change(screen.getByTestId('order-select-0'), { target: { value: '1' } });
+    await waitFor(() => expect(screen.getByText('Add Item')).toBeInTheDocument());
+
     fireEvent.click(screen.getByText('Add Item'));
     fireEvent.click(screen.getByText('Add Item'));
 
@@ -95,13 +137,13 @@ describe('DeliveryForm', () => {
   });
 
   it('submits create form', async () => {
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
     vi.mocked(deliveriesApi.create).mockResolvedValue({ id: 1 } as any);
     render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Add Item'));
-    const serialInput = screen.getByPlaceholderText('SN123456');
-    fireEvent.change(serialInput, { target: { value: 'SN-001' } });
+    await addOrderWithItem();
+    fireEvent.change(screen.getByPlaceholderText('SN123456'), { target: { value: 'SN-001' } });
 
     fireEvent.submit(screen.getByText('Create Delivery', { selector: 'button' }).closest('form')!);
     await waitFor(() => expect(deliveriesApi.create).toHaveBeenCalled());
@@ -110,9 +152,10 @@ describe('DeliveryForm', () => {
 
   it('submits edit form', async () => {
     mockParams = { id: '1' };
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
     vi.mocked(deliveriesApi.get).mockResolvedValue({
-      id: 1, customer_id: 'C1', ship_date: '2026-01-15', status: 'OPEN',
-      line_items: [{ item: 1, serial_number: 'SN1', price_per_unit: '9' }],
+      id: 1, customer_id: 'cust-123', ship_date: '2026-01-15', status: 'OPEN',
+      line_items: [{ item: 1, serial_number: 'SN1', price_per_unit: '999', order_line_item: 10, order_number: 'ORD-001' }],
     } as any);
     vi.mocked(deliveriesApi.update).mockResolvedValue({ id: 1 } as any);
 
@@ -124,33 +167,33 @@ describe('DeliveryForm', () => {
   });
 
   it('shows submit error', async () => {
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
     vi.mocked(deliveriesApi.create).mockRejectedValue(new Error('submit fail'));
     render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Add Item'));
-    const serialInput = screen.getByPlaceholderText('SN123456');
-    fireEvent.change(serialInput, { target: { value: 'SN-001' } });
+    await addOrderWithItem();
+    fireEvent.change(screen.getByPlaceholderText('SN123456'), { target: { value: 'SN-001' } });
 
     fireEvent.submit(screen.getByText('Create Delivery', { selector: 'button' }).closest('form')!);
     await waitFor(() => expect(screen.getByText('submit fail')).toBeInTheDocument());
   });
 
   it('highlights fields with API validation errors', async () => {
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
     vi.mocked(deliveriesApi.create).mockRejectedValue({
       response: { data: { tracking_number: ['This field may not be blank.'] } },
     });
     render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Add Item'));
+    await addOrderWithItem();
     fireEvent.change(screen.getByPlaceholderText('SN123456'), { target: { value: 'SN-001' } });
     fireEvent.submit(screen.getByText('Create Delivery', { selector: 'button' }).closest('form')!);
 
     await waitFor(() => {
       expect(screen.getByText(/tracking number: This field may not be blank/)).toBeInTheDocument();
     });
-    // Tracking number input should have red border
     expect(screen.getByPlaceholderText('e.g., TRACK123456')).toHaveClass('border-red-500');
   });
 
@@ -161,24 +204,17 @@ describe('DeliveryForm', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/deliveries');
   });
 
-  it('loads orders for customer and links order line item', async () => {
-    vi.mocked(ordersApi.list).mockResolvedValue([
-      {
-        id: 1, order_number: 'ORD-001', customer_id: 'cust-123', status: 'OPEN',
-        line_items: [{ id: 10, item: 1, item_name: 'Camera 1.0', quantity: 5, price_per_unit: '999' }],
-      } as any,
-    ]);
-
+  it('selects order and links item type with auto-filled price', async () => {
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
     render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Add Item'));
+    await addOrderWithItem();
 
-    // First combobox is the order line item selector
-    const selects = screen.getAllByRole('combobox');
-    fireEvent.change(selects[0], { target: { value: '10' } });
+    // Select item type from the order's line items
+    fireEvent.change(screen.getByTestId('item-type-0-0'), { target: { value: '10' } });
 
-    // Price should be auto-filled from order
+    // Price should be auto-filled from the order line item
     await waitFor(() => {
       expect(screen.getByDisplayValue('999')).toBeInTheDocument();
     });
@@ -193,13 +229,31 @@ describe('DeliveryForm', () => {
     expect(screen.getByDisplayValue('TRACK-NEW')).toBeInTheDocument();
   });
 
-  it('updates line item fields', async () => {
+  it('updates line item serial number', async () => {
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
     render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Add Item'));
+    await addOrderWithItem();
     const serialInput = screen.getByPlaceholderText('SN123456');
     fireEvent.change(serialInput, { target: { value: 'SN-TEST' } });
     expect(screen.getByDisplayValue('SN-TEST')).toBeInTheDocument();
+  });
+
+  it('shows prompt to select order before adding items', async () => {
+    vi.mocked(ordersApi.list).mockResolvedValue(mockOrders as any);
+    render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('Add Order'));
+    expect(screen.getByText(/Select an order above/)).toBeInTheDocument();
+  });
+
+  it('disables Add Order button when no open orders', async () => {
+    render(<BrowserRouter><DeliveryForm /></BrowserRouter>);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Create Delivery' })).toBeInTheDocument());
+
+    expect(screen.getByText('Add Order')).toBeDisabled();
+    expect(screen.getByText(/No open orders found/)).toBeInTheDocument();
   });
 });
