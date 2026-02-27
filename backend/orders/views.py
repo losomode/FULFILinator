@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from core.authentication import AuthinatorJWTAuthentication
-from core.permissions import IsSystemAdmin, CustomerDataIsolation
+from core.permissions import IsAdmin, CustomerDataIsolation
 from orders.models import Order, OrderLineItem
 from orders.serializers import OrderSerializer
 from notifications.utils import send_order_ready_to_close_email
@@ -38,7 +38,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.is_system_admin():
+        if user.is_admin:
             queryset = Order.objects.all()
         else:
             # Customer users only see their own customer's orders
@@ -46,7 +46,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         # Apply filters from query params
         customer_id = self.request.query_params.get('customer_id')
-        if customer_id and user.is_system_admin():
+        if customer_id and user.is_admin:
             queryset = queryset.filter(customer_id=customer_id)
         
         status_filter = self.request.query_params.get('status')
@@ -73,11 +73,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             permission_classes = [CustomerDataIsolation]
         else:
-            permission_classes = [IsSystemAdmin]
+            permission_classes = [IsAdmin]
         
         return [permission() for permission in permission_classes]
     
-    @action(detail=True, methods=['post'], permission_classes=[IsSystemAdmin])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
     def close(self, request, pk=None):
         """
         Close an order.
@@ -135,7 +135,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(order)
         return Response(serializer.data)
     
-    @action(detail=True, methods=['post'], permission_classes=[IsSystemAdmin])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
     def waive(self, request, pk=None):
         """
         Waive remaining quantity for a line item.

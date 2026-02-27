@@ -1,7 +1,8 @@
 # Product Requirements Document: FULFILinator
 
 **Generated**: 2026-02-22
-**Status**: Ready for AI Interview
+**Status**: Ready for AI Interview  
+**Note**: References to Docker and container deployment in this document are outdated. The inator family no longer uses Docker. See `INATOR.md` for current architecture.
 
 ## Initial Input
 

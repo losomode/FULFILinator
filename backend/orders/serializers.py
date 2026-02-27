@@ -31,7 +31,10 @@ class OrderLineItemSerializer(serializers.ModelSerializer):
             'override_reason',
             'admin_override'
         ]
-        read_only_fields = ['id', 'item_name', 'item_version', 'po_number', 'po_line_item']
+        read_only_fields = ['id', 'item_name', 'item_version', 'po_number']
+        extra_kwargs = {
+            'price_per_unit': {'required': False}  # Optional when allocating from PO
+        }
     
     def get_item_name(self, obj):
         """Get item name."""
@@ -116,6 +119,21 @@ class OrderSerializer(serializers.ModelSerializer):
         """
         return obj.get_fulfillment_status()
     
+    def validate(self, data):
+        """Validate order data."""
+        line_items_data = data.get('line_items', [])
+        allocate_from_po = data.get('allocate_from_po', True)
+        
+        # If not allocating from PO, price_per_unit is required for each line item
+        if not allocate_from_po:
+            for line_item_data in line_items_data:
+                if 'price_per_unit' not in line_item_data or line_item_data['price_per_unit'] is None:
+                    raise serializers.ValidationError({
+                        'line_items': 'price_per_unit is required for each line item when allocate_from_po is false.'
+                    })
+        
+        return data
+    
     def create(self, validated_data):
         """Create Order with nested line items and optional PO allocation."""
         line_items_data = validated_data.pop('line_items', [])
@@ -143,6 +161,8 @@ class OrderSerializer(serializers.ModelSerializer):
                 )
                 
                 if not allocation_result.success:
+                    # Delete the order since we failed to allocate
+                    order.delete()
                     raise serializers.ValidationError({
                         'line_items': f'Cannot allocate {quantity} units of {item.name}. {allocation_result.error_message}'
                     })

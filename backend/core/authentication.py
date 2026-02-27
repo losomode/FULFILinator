@@ -25,21 +25,23 @@ class AuthinatorUser:
         self.is_active = user_data.get('is_active', False)
         self.is_authenticated = True
     
+    @property
+    def is_admin(self):
+        """Check if user is an admin."""
+        return self.role == 'ADMIN'
+    
+    # Legacy aliases
     def is_system_admin(self):
-        """Check if user is a system admin."""
-        return self.role == 'SYSTEM_ADMIN'
+        return self.is_admin
     
     def is_customer_admin(self):
-        """Check if user is a customer admin."""
-        return self.role == 'CUSTOMER_ADMIN'
+        return self.is_admin
     
     def can_manage_users(self):
-        """Check if user can manage other users."""
-        return self.role in ['SYSTEM_ADMIN', 'CUSTOMER_ADMIN']
+        return self.is_admin
     
     def can_edit_data(self):
-        """Check if user can edit data (not read-only)."""
-        return self.role != 'CUSTOMER_READONLY'
+        return True
     
     def __str__(self):
         return f"{self.username} ({self.role})"

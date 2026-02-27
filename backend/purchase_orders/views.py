@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from core.authentication import AuthinatorJWTAuthentication
-from core.permissions import IsSystemAdmin, CustomerDataIsolation
+from core.permissions import IsAdmin, CustomerDataIsolation
 from purchase_orders.models import PurchaseOrder, POLineItem
 from purchase_orders.serializers import PurchaseOrderSerializer
 from notifications.utils import send_po_ready_to_close_email
@@ -40,7 +40,7 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.is_system_admin():
+        if user.is_admin:
             queryset = PurchaseOrder.objects.all()
         else:
             # Customer users only see their own customer's POs
@@ -48,7 +48,7 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         
         # Apply filters from query params
         customer_id = self.request.query_params.get('customer_id')
-        if customer_id and user.is_system_admin():
+        if customer_id and user.is_admin:
             queryset = queryset.filter(customer_id=customer_id)
         
         status_filter = self.request.query_params.get('status')
@@ -83,11 +83,11 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             permission_classes = [CustomerDataIsolation]
         else:
-            permission_classes = [IsSystemAdmin]
+            permission_classes = [IsAdmin]
         
         return [permission() for permission in permission_classes]
     
-    @action(detail=True, methods=['post'], permission_classes=[IsSystemAdmin])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
     def close(self, request, pk=None):
         """
         Close a purchase order.
@@ -145,7 +145,7 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(purchase_order)
         return Response(serializer.data)
     
-    @action(detail=True, methods=['post'], permission_classes=[IsSystemAdmin])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
     def waive(self, request, pk=None):
         """
         Waive remaining quantity for a line item.

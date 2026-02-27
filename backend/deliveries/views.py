@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from core.authentication import AuthinatorJWTAuthentication
-from core.permissions import IsSystemAdmin, CustomerDataIsolation
+from core.permissions import IsAdmin, CustomerDataIsolation
 from deliveries.models import Delivery, DeliveryLineItem
 from deliveries.serializers import DeliverySerializer, DeliveryLineItemSerializer
 from notifications.utils import send_delivery_shipped_email
@@ -39,7 +39,7 @@ class DeliveryViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.is_system_admin():
+        if user.is_admin:
             queryset = Delivery.objects.all()
         else:
             # Customer users only see their own customer's deliveries
@@ -47,7 +47,7 @@ class DeliveryViewSet(viewsets.ModelViewSet):
         
         # Apply filters from query params
         customer_id = self.request.query_params.get('customer_id')
-        if customer_id and user.is_system_admin():
+        if customer_id and user.is_admin:
             queryset = queryset.filter(customer_id=customer_id)
         
         status_filter = self.request.query_params.get('status')
@@ -78,11 +78,11 @@ class DeliveryViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve', 'search_serial']:
             permission_classes = [CustomerDataIsolation]
         else:
-            permission_classes = [IsSystemAdmin]
+            permission_classes = [IsAdmin]
         
         return [permission() for permission in permission_classes]
     
-    @action(detail=True, methods=['post'], permission_classes=[IsSystemAdmin])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
     def close(self, request, pk=None):
         """
         Close a delivery.
@@ -132,7 +132,7 @@ class DeliveryViewSet(viewsets.ModelViewSet):
             
             # Check customer data isolation
             user = request.user
-            if not user.is_system_admin():
+            if not user.is_admin:
                 if line_item.delivery.customer_id != user.customer_id:
                     return Response(
                         {'error': 'Serial number not found.'},

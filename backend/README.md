@@ -22,7 +22,7 @@ FULFILinator follows the "inator microservice philosophy":
 - Single-purpose service focused on fulfillment tracking
 - RESTful API built with Django REST Framework
 - JWT authentication via Authinator service
-- Simple deployment without Docker complexity
+- Simple, focused deployment
 
 ### Apps
 

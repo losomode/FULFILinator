@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 from core.models import Attachment, AdminOverride
 from core.serializers import AttachmentSerializer, AdminOverrideSerializer
-from core.permissions import CanEditData, IsSystemAdmin
+from core.permissions import IsAdmin
 
 
 @api_view(['GET'])
@@ -79,7 +79,7 @@ class AdminOverrideViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = AdminOverride.objects.all()
     serializer_class = AdminOverrideSerializer
-    permission_classes = [IsSystemAdmin]
+    permission_classes = [IsAdmin]
     
     def get_queryset(self):
         """

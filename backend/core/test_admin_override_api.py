@@ -53,7 +53,7 @@ class TestAdminOverrideListAPI:
             'id': 'admin-123',
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -77,7 +77,7 @@ class TestAdminOverrideListAPI:
             'id': 'user-1',
             'username': 'customer',
             'email': 'customer@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 'cust-1',
             'is_verified': True,
             'is_active': True
@@ -98,7 +98,7 @@ class TestAdminOverrideListAPI:
             'id': 'admin-123',
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -122,7 +122,7 @@ class TestAdminOverrideListAPI:
             'id': 'admin-123',
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -147,7 +147,7 @@ class TestAdminOverrideListAPI:
             'id': 'admin-123',
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -171,7 +171,7 @@ class TestAdminOverrideListAPI:
             'id': 'admin-123',
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -215,7 +215,7 @@ class TestAdminOverrideDetailAPI:
             'id': 'admin-123',
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -246,7 +246,7 @@ class TestAdminOverrideDetailAPI:
             'id': 'admin-123',
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -277,7 +277,7 @@ class TestAdminOverrideDetailAPI:
             'id': 'admin-123',
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -303,7 +303,7 @@ class TestAdminOverrideDetailAPI:
             'id': 'admin-123',
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True

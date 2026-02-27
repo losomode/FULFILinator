@@ -50,7 +50,7 @@ class PurchaseOrderAPITestCase(TestCase):
             "first_name": "System",
             "last_name": "Admin",
             "customer_id": None,
-            "role": "SYSTEM_ADMIN"
+            "role": "ADMIN"
         }
         
         self.customer_admin_user = {
@@ -59,7 +59,7 @@ class PurchaseOrderAPITestCase(TestCase):
             "first_name": "Customer",
             "last_name": "Admin",
             "customer_id": "cust-123",
-            "role": "CUSTOMER_ADMIN"
+            "role": "USER"
         }
         
         self.customer_user_user = {
@@ -68,7 +68,7 @@ class PurchaseOrderAPITestCase(TestCase):
             "first_name": "Customer",
             "last_name": "User",
             "customer_id": "cust-123",
-            "role": "CUSTOMER_USER"
+            "role": "USER"
         }
     
     def _authenticate_as(self, user_data, token):

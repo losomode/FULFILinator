@@ -28,7 +28,7 @@ class TestAuthinatorIntegration:
             'id': 1,
             'username': 'testuser',
             'email': 'test@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer': None,
             'is_verified': True,
             'is_active': True
@@ -40,7 +40,7 @@ class TestAuthinatorIntegration:
         
         assert user is not None
         assert user['username'] == 'testuser'
-        assert user['role'] == 'SYSTEM_ADMIN'
+        assert user['role'] == 'ADMIN'
         assert mock_get.called
     
     @patch('core.authinator_client.requests.get')
@@ -94,7 +94,7 @@ class TestAuthinatorIntegration:
             'id': 1,
             'username': 'testuser',
             'email': 'test@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -124,7 +124,7 @@ class TestCrossServiceAuthentication:
             'id': 1,
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -150,7 +150,7 @@ class TestCrossServiceAuthentication:
             'id': 2,
             'username': 'customer_user',
             'email': 'user@customer.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 5,
             'customer_name': 'Test Customer',
             'is_verified': True,
@@ -167,6 +167,6 @@ class TestCrossServiceAuthentication:
         user, token = auth.authenticate(request)
         
         assert user.username == 'customer_user'
-        assert user.role == 'CUSTOMER_USER'
+        assert user.role == 'USER'
         assert user.customer_id == 5
         assert user.is_system_admin() is False
