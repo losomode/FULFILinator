@@ -1,0 +1,57 @@
+version: '3'
+
+vars:
+  NPM: npm
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  install:
+    desc: Install dependencies
+    cmds:
+      - "{{.NPM}} install"
+
+  test:
+    desc: Run all tests
+    cmds:
+      - "{{.NPM}} run test"
+
+  test:coverage:
+    desc: Run tests with coverage (MUST be ≥85%)
+    cmds:
+      - "{{.NPM}} run test:coverage"
+    
+  test:ui:
+    desc: Run tests with UI
+    cmds:
+      - "{{.NPM}} run test:ui"
+
+  test:watch:
+    desc: Run tests in watch mode
+    cmds:
+      - "{{.NPM}} run test -- --watch"
+
+  check:
+    desc: Pre-commit checks (MUST run before commit)
+    deps:
+      - test:coverage
+    cmds:
+      - echo "✓ All checks passed!"
+
+  dev:
+    desc: Start development server
+    cmds:
+      - "{{.NPM}} run dev"
+
+  build:
+    desc: Build for production
+    cmds:
+      - "{{.NPM}} run build"
+
+  clean:
+    desc: Clean build artifacts and dependencies
+    cmds:
+      - rm -rf node_modules dist coverage .vite

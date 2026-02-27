@@ -34,7 +34,7 @@ def metrics(request):
     user = request.user
     
     # Base querysets with customer isolation
-    if user.is_system_admin():
+    if user.is_admin:
         pos = PurchaseOrder.objects.all()
         orders = Order.objects.all()
         deliveries = Delivery.objects.all()
@@ -80,7 +80,7 @@ def metrics(request):
     ).count()
     
     # Customer count (for system admins)
-    if user.is_system_admin():
+    if user.is_admin:
         # Count unique customer IDs across all entities
         customer_ids = set()
         customer_ids.update(pos.values_list('customer_id', flat=True).distinct())
@@ -138,7 +138,7 @@ def alerts(request):
     user = request.user
     
     # Base querysets with customer isolation
-    if user.is_system_admin():
+    if user.is_admin:
         pos = PurchaseOrder.objects.filter(status='OPEN')
         orders = Order.objects.filter(status='OPEN')
     else:

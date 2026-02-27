@@ -1,6 +1,6 @@
 # FULFILinator Deployment Guide
 
-This guide covers production deployment for FULFILinator following the "inator microservice philosophy" - simple, focused deployment without Docker complexity.
+This guide covers production deployment for FULFILinator following the "inator microservice philosophy" - simple, focused deployment.
 
 ## Prerequisites
 

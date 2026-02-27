@@ -1,7 +1,8 @@
 # FULFILinator System - Complete Specification
 
 **Generated**: 2026-02-22  
-**Status**: Ready for Implementation
+**Status**: Ready for Implementation  
+**Note**: References to Docker, docker-compose, and container deployment in this document are outdated. The inator family no longer uses Docker. See `INATOR.md` for current architecture.
 
 ---
 

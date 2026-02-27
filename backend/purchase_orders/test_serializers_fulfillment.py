@@ -28,7 +28,7 @@ class TestPurchaseOrderSerializerFulfillment:
             'id': "test-user-1",
             'username': "testuser",
             'email': "test@example.com",
-            'role': "SYSTEM_ADMIN",
+            'role': "ADMIN",
             'customer_id': "cust-123",
             'is_verified': True,
             'is_active': True
@@ -146,7 +146,7 @@ class TestOrderSerializerFulfillment:
             'id': "test-user-1",
             'username': "testuser",
             'email': "test@example.com",
-            'role': "SYSTEM_ADMIN",
+            'role': "ADMIN",
             'customer_id': "cust-123",
             'is_verified': True,
             'is_active': True

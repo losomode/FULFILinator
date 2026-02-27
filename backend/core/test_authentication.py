@@ -18,7 +18,7 @@ class TestAuthinatorUser:
             'id': 1,
             'username': 'testuser',
             'email': 'test@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'customer_name': None,
             'is_verified': True,
@@ -30,13 +30,13 @@ class TestAuthinatorUser:
         assert user.id == 1
         assert user.username == 'testuser'
         assert user.email == 'test@test.com'
-        assert user.role == 'SYSTEM_ADMIN'
+        assert user.role == 'ADMIN'
         assert user.is_authenticated is True
     
     def test_is_system_admin(self):
         """Test is_system_admin method."""
-        admin_data = {'id': 1, 'username': 'admin', 'email': 'a@test.com', 'role': 'SYSTEM_ADMIN'}
-        user_data = {'id': 2, 'username': 'user', 'email': 'u@test.com', 'role': 'CUSTOMER_USER'}
+        admin_data = {'id': 1, 'username': 'admin', 'email': 'a@test.com', 'role': 'ADMIN'}
+        user_data = {'id': 2, 'username': 'user', 'email': 'u@test.com', 'role': 'USER'}
         
         admin = AuthinatorUser(admin_data)
         user = AuthinatorUser(user_data)
@@ -46,8 +46,8 @@ class TestAuthinatorUser:
     
     def test_is_customer_admin(self):
         """Test is_customer_admin method."""
-        admin_data = {'id': 1, 'username': 'admin', 'email': 'a@test.com', 'role': 'CUSTOMER_ADMIN', 'customer_id': 1}
-        user_data = {'id': 2, 'username': 'user', 'email': 'u@test.com', 'role': 'CUSTOMER_USER', 'customer_id': 1}
+        admin_data = {'id': 1, 'username': 'admin', 'email': 'a@test.com', 'role': 'ADMIN', 'customer_id': 1}
+        user_data = {'id': 2, 'username': 'user', 'email': 'u@test.com', 'role': 'USER', 'customer_id': 1}
         
         admin = AuthinatorUser(admin_data)
         user = AuthinatorUser(user_data)
@@ -57,21 +57,21 @@ class TestAuthinatorUser:
     
     def test_can_manage_users(self):
         """Test can_manage_users method."""
-        sys_admin = AuthinatorUser({'id': 1, 'username': 'sa', 'email': 'sa@test.com', 'role': 'SYSTEM_ADMIN'})
-        cust_admin = AuthinatorUser({'id': 2, 'username': 'ca', 'email': 'ca@test.com', 'role': 'CUSTOMER_ADMIN', 'customer_id': 1})
-        cust_user = AuthinatorUser({'id': 3, 'username': 'cu', 'email': 'cu@test.com', 'role': 'CUSTOMER_USER', 'customer_id': 1})
+        sys_admin = AuthinatorUser({'id': 1, 'username': 'sa', 'email': 'sa@test.com', 'role': 'ADMIN'})
+        cust_admin = AuthinatorUser({'id': 2, 'username': 'ca', 'email': 'ca@test.com', 'role': 'ADMIN', 'customer_id': 1})
+        cust_user = AuthinatorUser({'id': 3, 'username': 'cu', 'email': 'cu@test.com', 'role': 'USER', 'customer_id': 1})
         
         assert sys_admin.can_manage_users() is True
         assert cust_admin.can_manage_users() is True
         assert cust_user.can_manage_users() is False
     
     def test_can_edit_data(self):
-        """Test can_edit_data method."""
-        user = AuthinatorUser({'id': 1, 'username': 'user', 'email': 'u@test.com', 'role': 'CUSTOMER_USER', 'customer_id': 1})
-        readonly = AuthinatorUser({'id': 2, 'username': 'ro', 'email': 'ro@test.com', 'role': 'CUSTOMER_READONLY', 'customer_id': 1})
+        """Test can_edit_data method — all users can edit (no read-only role)."""
+        admin = AuthinatorUser({'id': 1, 'username': 'admin', 'email': 'a@test.com', 'role': 'ADMIN'})
+        user = AuthinatorUser({'id': 2, 'username': 'user', 'email': 'u@test.com', 'role': 'USER', 'customer_id': 1})
         
+        assert admin.can_edit_data() is True
         assert user.can_edit_data() is True
-        assert readonly.can_edit_data() is False
 
 
 @pytest.mark.django_db
@@ -120,7 +120,7 @@ class TestAuthinatorJWTAuthentication:
             'id': 1,
             'username': 'unverified',
             'email': 'unverified@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 1,
             'is_verified': False,
             'is_active': True,
@@ -142,7 +142,7 @@ class TestAuthinatorJWTAuthentication:
             'id': 1,
             'username': 'inactive',
             'email': 'inactive@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 1,
             'is_verified': True,
             'is_active': False,
@@ -164,7 +164,7 @@ class TestAuthinatorJWTAuthentication:
             'id': 1,
             'username': 'testuser',
             'email': 'test@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 1,
             'customer_name': 'Test Corp',
             'is_verified': True,
@@ -179,6 +179,6 @@ class TestAuthinatorJWTAuthentication:
         
         assert user.username == 'testuser'
         assert user.email == 'test@test.com'
-        assert user.role == 'CUSTOMER_USER'
+        assert user.role == 'USER'
         assert user.customer_id == 1
         assert token == 'validtoken'

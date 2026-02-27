@@ -31,6 +31,13 @@ class DeliveryLineItemSerializer(serializers.ModelSerializer):
             'admin_override'
         ]
         read_only_fields = ['id', 'item_name', 'item_version', 'order_number']
+        # Remove serializer-level UniqueValidator for serial_number — the DB unique
+        # constraint still enforces it, but this prevents false rejections when
+        # updating a delivery (existing serial numbers are still in the DB during
+        # validation, before the update() method deletes and re-creates line items).
+        extra_kwargs = {
+            'serial_number': {'validators': []},
+        }
     
     def get_item_name(self, obj):
         """Get item name."""
@@ -105,6 +112,63 @@ class DeliverySerializer(serializers.ModelSerializer):
         customer_data = authinator_client.get_customer(obj.customer_id)
         return customer_data['name'] if customer_data else None
     
+    def validate(self, data):
+        """Validate delivery data including order quantity limits."""
+        from collections import defaultdict
+        
+        line_items_data = data.get('line_items', [])
+        
+        # Every delivery line item must be linked to an order
+        for li_data in line_items_data:
+            if not li_data.get('order_line_item'):
+                raise serializers.ValidationError({
+                    'line_items': 'Every delivery line item must be linked to an order. '
+                                  'Create an ad-hoc order first if needed.'
+                })
+        
+        # Group delivery items by order_line_item to check quantity limits
+        order_li_counts = defaultdict(int)
+        for li_data in line_items_data:
+            order_li_counts[li_data['order_line_item'].id] += 1
+        
+        if order_li_counts:
+            # Exclude current delivery's items when updating
+            current_delivery_id = self.instance.id if self.instance else None
+            
+            for oli_id, new_count in order_li_counts.items():
+                oli = None
+                # Find the OLI object from the line items data
+                for li_data in line_items_data:
+                    candidate = li_data.get('order_line_item')
+                    if candidate and candidate.id == oli_id:
+                        oli = candidate
+                        break
+                
+                if not oli:
+                    continue
+                
+                # Count existing deliveries against this order line item
+                existing_qs = DeliveryLineItem.objects.filter(order_line_item_id=oli_id)
+                if current_delivery_id:
+                    existing_qs = existing_qs.exclude(delivery_id=current_delivery_id)
+                existing_count = existing_qs.count()
+                
+                available = oli.quantity - oli.waived_quantity
+                remaining = available - existing_count
+                
+                if new_count > remaining:
+                    raise serializers.ValidationError({
+                        'line_items': (
+                            f'Cannot deliver {new_count} unit(s) of {oli.item.name} against '
+                            f'{oli.order.order_number}. '
+                            f'{existing_count} already delivered out of {available} ordered '
+                            f'({remaining} remaining). '
+                            f'Please create a new order to deliver additional items.'
+                        )
+                    })
+        
+        return data
+    
     def create(self, validated_data):
         """Create Delivery with nested line items."""
         line_items_data = validated_data.pop('line_items', [])
@@ -126,6 +190,8 @@ class DeliverySerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         """Update Delivery and replace line items."""
+        from django.db import IntegrityError
+        
         line_items_data = validated_data.pop('line_items', None)
         
         # Update Delivery fields
@@ -141,6 +207,11 @@ class DeliverySerializer(serializers.ModelSerializer):
             # Create new line items
             for line_item_data in line_items_data:
                 line_item_data.pop('admin_override', None)
-                DeliveryLineItem.objects.create(delivery=instance, **line_item_data)
+                try:
+                    DeliveryLineItem.objects.create(delivery=instance, **line_item_data)
+                except IntegrityError:
+                    raise serializers.ValidationError({
+                        'line_items': f"Duplicate serial number: {line_item_data.get('serial_number', '')}"
+                    })
         
         return instance

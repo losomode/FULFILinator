@@ -8,7 +8,6 @@ FULFILinator is part of a microservices architecture:
 - **Authinator** (Port 8001): Centralized authentication service
 - **RMAinator** (Port 8002): RMA tracking service
 - **FULFILinator** (Port 8003): Order fulfillment tracking service
-- **nginx** (Port 80): API gateway
 
 ## Quick Start
 
@@ -30,30 +29,6 @@ python manage.py migrate
 
 # Run development server
 python manage.py runserver 8003
-```
-
-### Docker Setup (Recommended)
-
-```bash
-# From the sighthound directory (contains all services)
-cd /Users/ryan/opt/sighthound
-
-# Start all services with docker-compose
-docker-compose up
-
-# Services will be available at:
-# - Authinator: http://localhost:8001
-# - RMAinator: http://localhost:8002
-# - FULFILinator: http://localhost:8003
-# - API Gateway: http://localhost (routes to all services)
-```
-
-### Individual Service
-
-```bash
-# From FULFILinator directory
-cd FULFILinator
-docker-compose up
 ```
 
 ## Testing
@@ -117,7 +92,6 @@ FULFILinator/
 │   ├── deliveries/          # Delivery tracking
 │   ├── notifications/       # Email notifications
 │   └── dashboard/           # Metrics & analytics
-├── docker-compose.yml       # Service orchestration
 └── README.md               # This file
 ```
 
@@ -137,8 +111,6 @@ FULFILinator/
 - Permission system with customer data isolation
 - Health check endpoint
 - 39 tests with 92.57% coverage
-- Docker configuration
-- nginx API gateway setup
 
 ### 🚧 In Progress
 - Subphase 2.2: Item catalog

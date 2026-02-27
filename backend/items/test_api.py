@@ -42,7 +42,7 @@ class TestItemListAPI:
             'id': 1,
             'username': 'testuser',
             'email': 'test@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 1,
             'is_verified': True,
             'is_active': True
@@ -91,7 +91,7 @@ class TestItemDetailAPI:
             'id': 1,
             'username': 'testuser',
             'email': 'test@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 1,
             'is_verified': True,
             'is_active': True
@@ -116,7 +116,7 @@ class TestItemDetailAPI:
             'id': 1,
             'username': 'testuser',
             'email': 'test@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 1,
             'is_verified': True,
             'is_active': True
@@ -142,7 +142,7 @@ class TestItemCreateAPI:
             'id': 1,
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -178,7 +178,7 @@ class TestItemCreateAPI:
             'id': 2,
             'username': 'customer',
             'email': 'customer@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 1,
             'is_verified': True,
             'is_active': True
@@ -205,7 +205,7 @@ class TestItemCreateAPI:
             'id': 1,
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -248,7 +248,7 @@ class TestItemUpdateAPI:
             'id': 1,
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -280,7 +280,7 @@ class TestItemUpdateAPI:
             'id': 2,
             'username': 'customer',
             'email': 'customer@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 1,
             'is_verified': True,
             'is_active': True
@@ -324,7 +324,7 @@ class TestItemDeleteAPI:
             'id': 1,
             'username': 'admin',
             'email': 'admin@test.com',
-            'role': 'SYSTEM_ADMIN',
+            'role': 'ADMIN',
             'customer_id': None,
             'is_verified': True,
             'is_active': True
@@ -350,7 +350,7 @@ class TestItemDeleteAPI:
             'id': 2,
             'username': 'customer',
             'email': 'customer@test.com',
-            'role': 'CUSTOMER_USER',
+            'role': 'USER',
             'customer_id': 1,
             'is_verified': True,
             'is_active': True
