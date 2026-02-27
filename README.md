@@ -235,20 +235,26 @@ AUTHINATOR_API_URL=http://localhost:8001/api/auth/
 AUTHINATOR_VERIFY_SSL=False
 ```
 
-## Contributing
+## 📦 Repository
 
-This project follows TDD and [Conventional Commits](https://www.conventionalcommits.org/). See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
+**GitHub**: [losomode/FULFILinator](https://github.com/losomode/FULFILinator)
 
-## Part of the Inator Platform
+## 📝 License
 
-| Service | What it does | Repo |
-|---------|-------------|------|
-| 🔐 **Authinator** | Authentication, users, SSO, MFA | [losomode/AUTHinator](https://github.com/losomode/AUTHinator) |
-| 📦 **RMAinator** | Return merchandise tracking | [losomode/RMAinator](https://github.com/losomode/RMAinator) |
-| 🚚 **FULFILinator** | Order fulfillment (you are here) | [losomode/FULFILinator](https://github.com/losomode/FULFILinator) |
+MIT — See [LICENSE](LICENSE) for details.
 
-See the [Inator Platform repo](https://github.com/losomode/inator) for the full architecture and how to run everything together.
+## 👥 Contributing
 
-## License
+Part of the Inator Platform. See main platform docs for contributing guidelines.
 
-MIT
+## ❓ Support
+
+- **Issues**: [GitHub Issues](https://github.com/losomode/FULFILinator/issues)
+- **Platform Docs**: [Inator Platform](https://github.com/losomode/inator)
+- **Discord**: Coming soon
+
+---
+
+*Built with ❤️ for the Inator Platform*
+
+> *"You know, people always ask me why I track every single delivery down to the serial number. And I say — because once, a package meant for me ended up at my brother Roger's house. ROGER! He got my Fully Automatic Bubble Wrap Popper and I got nothing! NOTHING! That's why the FULFILinator exists. No package shall ever go astray again!"*
