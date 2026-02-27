@@ -33,6 +33,24 @@ class TestAuthinatorUser:
         assert user.role == 'ADMIN'
         assert user.is_authenticated is True
     
+    def test_is_admin_with_current_role(self):
+        """Test is_admin with current ADMIN role."""
+        admin = AuthinatorUser({'id': 1, 'username': 'admin', 'email': 'a@test.com', 'role': 'ADMIN'})
+        user = AuthinatorUser({'id': 2, 'username': 'user', 'email': 'u@test.com', 'role': 'USER'})
+        
+        assert admin.is_admin is True
+        assert user.is_admin is False
+    
+    def test_is_admin_with_legacy_system_admin_role(self):
+        """Test is_admin recognises legacy SYSTEM_ADMIN role from pre-migration Authinator."""
+        user = AuthinatorUser({'id': 1, 'username': 'sa', 'email': 'sa@test.com', 'role': 'SYSTEM_ADMIN'})
+        assert user.is_admin is True
+    
+    def test_is_admin_with_legacy_customer_admin_role(self):
+        """Test is_admin recognises legacy CUSTOMER_ADMIN role from pre-migration Authinator."""
+        user = AuthinatorUser({'id': 1, 'username': 'ca', 'email': 'ca@test.com', 'role': 'CUSTOMER_ADMIN'})
+        assert user.is_admin is True
+    
     def test_is_system_admin(self):
         """Test is_system_admin method."""
         admin_data = {'id': 1, 'username': 'admin', 'email': 'a@test.com', 'role': 'ADMIN'}

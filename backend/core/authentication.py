@@ -27,8 +27,8 @@ class AuthinatorUser:
     
     @property
     def is_admin(self):
-        """Check if user is an admin."""
-        return self.role == 'ADMIN'
+        """Check if user is an admin (handles both current and legacy Authinator role names)."""
+        return self.role in ('ADMIN', 'SYSTEM_ADMIN', 'CUSTOMER_ADMIN')
     
     # Legacy aliases
     def is_system_admin(self):
