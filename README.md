@@ -1,49 +1,112 @@
-# FULFILinator
+# 🚚 FULFILinator
 
-Order fulfillment tracking system for managing Purchase Orders, Orders, and Deliveries. Part of the **inator** microservice family.
+> *"Behold! The FULFILinator! It tracks every purchase order, every order, every delivery — with an iron grip! No item shall slip through the cracks of the Tri-State Area's supply chain!"*
+
+Order fulfillment tracking system for the complete **PO → Order → Delivery** pipeline. Part of the [Inator Platform](https://github.com/losomode/inator) family.
+
+**Admins** manage the full lifecycle — creating POs, placing orders, shipping deliveries, tracking serial numbers. **Customers** get clear visibility into what's been ordered, what's shipped, and what's left.
+
+## How It Works
+
+```mermaid
+graph LR
+    PO[📜 Purchase Order<br/><i>Customer commits to buy N items</i>]
+    ORD[📦 Order<br/><i>Fulfill from one or more POs</i>]
+    DEL[🚚 Delivery<br/><i>Ship with serial numbers</i>]
+
+    PO -->|allocate| ORD
+    ORD -->|ship| DEL
+
+    style PO fill:#3498db,color:#fff
+    style ORD fill:#e67e22,color:#fff
+    style DEL fill:#27ae60,color:#fff
+```
+
+Each step updates the one before it. Deliver 5 of 10 items? The order knows. The PO knows. Everyone knows. No spreadsheets. No guessing.
+
+### The Fulfillment Pipeline
+
+```mermaid
+graph TB
+    subgraph "PO Management"
+        CREATE_PO[Create PO<br/><i>Items, quantities, prices</i>]
+        TRACK_PO[Track Fulfillment<br/><i>Ordered / Remaining / Waived</i>]
+        CLOSE_PO[Close PO<br/><i>All items fulfilled or waived</i>]
+    end
+
+    subgraph "Order Management"
+        CREATE_ORD[Create Order<br/><i>Auto-allocate from oldest PO</i>]
+        TRACK_ORD[Track Deliveries<br/><i>Shipped / Remaining</i>]
+        CLOSE_ORD[Close Order<br/><i>All items delivered</i>]
+    end
+
+    subgraph "Delivery Management"
+        CREATE_DEL[Create Delivery<br/><i>Link to order, assign serials</i>]
+        SHIP[Ship<br/><i>Tracking number + serial per item</i>]
+        CLOSE_DEL[Close Delivery<br/><i>Confirmed received</i>]
+    end
+
+    CREATE_PO --> TRACK_PO
+    TRACK_PO --> CLOSE_PO
+    CREATE_ORD --> TRACK_ORD
+    TRACK_ORD --> CLOSE_ORD
+    CREATE_DEL --> SHIP --> CLOSE_DEL
+
+    CREATE_ORD -.->|updates| TRACK_PO
+    CLOSE_DEL -.->|updates| TRACK_ORD
+
+    style CREATE_PO fill:#3498db,color:#fff
+    style TRACK_PO fill:#3498db,color:#fff
+    style CLOSE_PO fill:#2c3e50,color:#fff
+    style CREATE_ORD fill:#e67e22,color:#fff
+    style TRACK_ORD fill:#e67e22,color:#fff
+    style CLOSE_ORD fill:#2c3e50,color:#fff
+    style CREATE_DEL fill:#27ae60,color:#fff
+    style SHIP fill:#27ae60,color:#fff
+    style CLOSE_DEL fill:#2c3e50,color:#fff
+```
 
 ## Architecture
 
-FULFILinator is a full-stack application with a Django REST backend and React/TypeScript frontend.
+```mermaid
+graph LR
+    subgraph "FULFILinator"
+        direction TB
+        FE[🖥 Frontend<br/>React + TypeScript + Tailwind]
+        BE[⚙️ Backend<br/>Django + DRF]
+        DB[(🗄 SQLite)]
 
-- **Backend** — Django + DRF, SQLite (port 8003)
-- **Frontend** — React, TypeScript, Vite, Tailwind CSS (port 3000)
-- **Authinator** — Centralized auth service / JWT (port 8001)
-- **RMAinator** — RMA tracking, sibling service (port 8002)
+        FE <-->|REST API| BE
+        BE <--> DB
+    end
 
-### Backend Apps
+    AUTH[🔐 Authinator<br/><i>JWT Auth</i>]
+    FE -->|JWT| AUTH
+    BE -->|Token validation| AUTH
 
-- **core** — Authentication (JWT via Authinator), RBAC permissions, health check
-- **items** — Item catalog (name, version, MSRP, min price)
-- **purchase_orders** — PO lifecycle, fulfillment status tracking, quantity waiving, admin override close
-- **orders** — Order management, automatic PO allocation (oldest-first), ad-hoc orders
-- **deliveries** — Delivery tracking with serial numbers, over-delivery validation, order linking
-- **dashboard** — Metrics and analytics
-- **notifications** — Email notifications
+    style FE fill:#3498db,color:#fff
+    style BE fill:#2ecc71,color:#fff
+    style DB fill:#9b59b6,color:#fff
+    style AUTH fill:#4a90d9,color:#fff
+```
 
-### Frontend Pages
-
-- **Purchase Orders** — List, create/edit, detail with fulfillment status, waive quantities, close with override
-- **Orders** — List, create/edit with PO allocation preview, detail with fulfillment tracking
-- **Deliveries** — List, create/edit with order linking, serial number entry, field-level validation errors
-- **Items** — Item catalog CRUD
-- **Serial Search** — Look up deliveries by serial number
+| Layer | Stack |
+|-------|-------|
+| Backend | Python 3.11+, Django + DRF, SQLite (port **8003**) |
+| Frontend | TypeScript (strict), React 18, Vite, Tailwind CSS (port **3000**) |
+| Auth | JWT via [Authinator](https://github.com/losomode/AUTHinator) |
+| Testing | pytest + coverage (backend), Vitest + RTL (frontend) |
+| Task Runner | [Task](https://taskfile.dev/) |
 
 ## Quick Start
 
-### Prerequisites
-
-- Python 3.11+
-- Node.js 18+
-- [Task](https://taskfile.dev/) (task runner)
-
-### Setup
+Requires Python 3.11+, Node.js 18+, and [Task](https://taskfile.dev/) (`brew install go-task`).
 
 ```bash
-# Install all dependencies
+# Install everything
 task install
 
-# Run database migrations
+# Database setup
 task backend:migrate
 
 # Start backend (port 8003)
@@ -53,81 +116,116 @@ task backend:dev
 task frontend:dev
 ```
 
-### Common Tasks
+### Task Reference
 
 ```bash
-task                      # List all available tasks
-task test:coverage        # Run all tests with coverage (≥85% threshold)
-task backend:test         # Run backend tests only
-task frontend:test        # Run frontend tests only
-task lint                 # Lint all code
-task check                # Pre-commit checks (fmt, lint, test, coverage)
-task build                # Production build
-task db:reset             # Reset database (destroys all data)
-task stats                # Show project statistics
+task                      # List all tasks
+task check                # Pre-commit: fmt + lint + test + coverage
+task test:coverage        # All tests with ≥85% coverage gate
+task build                # Production frontend build
+task db:reset             # ⚠️  Nuclear option — wipes the database
+task stats                # Project statistics
 ```
 
-## Testing
+<details>
+<summary>More tasks</summary>
 
 ```bash
-# All tests with coverage
-task test:coverage
+# Backend
+task backend:test            # Run backend tests
+task backend:test:coverage   # Backend tests with coverage
+task backend:lint            # Lint with ruff
+task backend:shell           # Django shell
 
-# Backend only
-task backend:test
-task backend:test:coverage
-
-# Frontend only (239 tests, ≥85% function coverage)
-task frontend:test
-task frontend:test:coverage
+# Frontend
+task frontend:test           # Run frontend tests (239 tests)
+task frontend:test:coverage  # Frontend tests with ≥85% coverage
+task frontend:lint           # ESLint
+task frontend:typecheck      # TypeScript strict mode
 ```
+
+</details>
 
 ## Key Features
 
-- **PO → Order → Delivery pipeline** with automatic fulfillment status tracking at each level
-- **Automatic PO allocation** — orders draw from the oldest PO first, respecting quantities and prices
-- **Over-delivery prevention** — deliveries cannot exceed ordered quantities per line item
-- **Serial number tracking** — every delivered item requires a unique serial number
-- **Quantity waiving** — admins can waive remaining PO quantities with a reason
-- **Admin override close** — force-close POs/Orders with justification when items remain
-- **Field-level validation errors** — form fields highlight with the specific error from the API
-- **Attachment support** — file uploads on POs, Orders, and Deliveries
-- **Multi-tenant data isolation** — customers see only their own data
+🔄 **Automatic PO Allocation** — Orders draw from the oldest PO first, respecting quantities and contracted prices. PO-1 at $2,000/unit gets consumed before PO-2 at $2,100/unit. No manual bookkeeping.
 
-## User Roles
+🚫 **Over-delivery Prevention** — You can't ship more than was ordered. The system enforces quantity limits per order line item across all deliveries.
 
-- **SYSTEM_ADMIN** — Full access to all data and features
-- **CUSTOMER_ADMIN** — Manage users and data for their customer
-- **CUSTOMER_USER** — View and edit their customer's data
-- **CUSTOMER_READONLY** — View-only access to their customer's data
+🔢 **Serial Number Tracking** — Every physical item in a delivery gets a unique serial number. Duplicates are rejected. Search any serial to find its delivery instantly.
+
+✨ **Quantity Waiving** — Customer only wants 8 of 10 units? Admins can waive the remainder with a reason, letting POs close cleanly without phantom inventory.
+
+🔓 **Admin Override Close** — When items remain but the PO needs to close, admins can force it with a justification. The system confirms before proceeding.
+
+⚠️ **Field-Level Validation** — API errors highlight the exact form field that failed. No more guessing which of your 12 line items has a blank serial number.
+
+📎 **Attachments** — Upload files to POs, Orders, or Deliveries. Link Google Docs and HubSpot deals on POs.
+
+🔒 **Multi-Tenant Isolation** — Customers see only their own data. Admins see everything.
+
+## Roles
+
+| Role | Scope |
+|------|-------|
+| **SYSTEM_ADMIN** | Full access to all data and features across all customers |
+| **CUSTOMER_ADMIN** | Manage users and data within their customer account |
+| **CUSTOMER_USER** | View and edit their customer's POs, orders, and deliveries |
+| **CUSTOMER_READONLY** | View-only access to their customer's data |
+
+Roles come from the JWT issued by [Authinator](https://github.com/losomode/AUTHinator). FULFILinator never stores credentials.
+
+## API
+
+All endpoints live under `/api/fulfil/` and require a valid JWT (except health check). Full OpenAPI docs available at `/api/fulfil/docs/`.
+
+```
+GET  /api/fulfil/health/                        # Health check (no auth)
+
+CRUD /api/fulfil/items/                         # Item catalog
+CRUD /api/fulfil/purchase-orders/               # Purchase orders
+POST /api/fulfil/purchase-orders/:id/close/     # Close PO
+POST /api/fulfil/purchase-orders/:id/waive/     # Waive remaining qty
+CRUD /api/fulfil/orders/                        # Orders
+POST /api/fulfil/orders/:id/close/              # Close order
+CRUD /api/fulfil/deliveries/                    # Deliveries
+POST /api/fulfil/deliveries/:id/close/          # Close delivery
+GET  /api/fulfil/deliveries/serial-search/?q=   # Serial number lookup
+CRUD /api/fulfil/attachments/                   # File attachments
+GET  /api/fulfil/dashboard/                     # Metrics & analytics
+
+GET  /api/fulfil/docs/                          # Swagger UI
+GET  /api/fulfil/redoc/                         # ReDoc
+GET  /api/fulfil/schema/                        # OpenAPI schema
+```
 
 ## Project Structure
 
 ```
 Fulfilinator/
 ├── backend/
-│   ├── config/              # Django settings & URLs
-│   ├── core/                # Auth, permissions, health check
+│   ├── config/              # Django settings, URLs, WSGI
+│   ├── core/                # Auth (JWT), permissions, health check, attachments
 │   ├── items/               # Item catalog
-│   ├── purchase_orders/     # PO management & fulfillment
+│   ├── purchase_orders/     # PO lifecycle & fulfillment tracking
 │   ├── orders/              # Order management & PO allocation
 │   ├── deliveries/          # Delivery tracking & serial numbers
 │   ├── dashboard/           # Metrics & analytics
 │   └── notifications/       # Email notifications
 ├── frontend/
 │   └── src/
-│       ├── api/             # API clients & types
-│       ├── components/      # Shared UI components
-│       ├── hooks/           # Custom React hooks
-│       ├── pages/           # Route pages (POs, Orders, Deliveries, Items)
+│       ├── api/             # Axios clients & TypeScript types
+│       ├── components/      # Shared UI (Button, FormField, Layout, etc.)
+│       ├── hooks/           # Custom hooks (useUser)
+│       ├── pages/           # POs, Orders, Deliveries, Items, Serial Search
 │       └── utils/           # Auth utilities
 ├── Taskfile.yml             # Project task runner
 └── README.md
 ```
 
-## Environment Variables
+## Environment
 
-Create a `.env` file in the `backend/` directory:
+Create `backend/.env`:
 
 ```env
 DEBUG=True
@@ -137,27 +235,19 @@ AUTHINATOR_API_URL=http://localhost:8001/api/auth/
 AUTHINATOR_VERIFY_SSL=False
 ```
 
-## API
-
-All endpoints are under `/api/fulfil/` and require JWT authentication via Authinator (except the health check).
-
-```
-GET  /api/fulfil/health/                       # Health check (no auth)
-CRUD /api/fulfil/items/                        # Item catalog
-CRUD /api/fulfil/purchase-orders/              # Purchase orders
-POST /api/fulfil/purchase-orders/:id/close/    # Close PO
-POST /api/fulfil/purchase-orders/:id/waive/    # Waive quantity
-CRUD /api/fulfil/orders/                       # Orders
-POST /api/fulfil/orders/:id/close/             # Close order
-CRUD /api/fulfil/deliveries/                   # Deliveries
-POST /api/fulfil/deliveries/:id/close/         # Close delivery
-GET  /api/fulfil/deliveries/serial-search/?q=  # Serial lookup
-GET  /api/fulfil/dashboard/                    # Dashboard metrics
-```
-
 ## Contributing
 
-This project follows TDD principles. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+This project follows TDD and [Conventional Commits](https://www.conventionalcommits.org/). See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
+
+## Part of the Inator Platform
+
+| Service | What it does | Repo |
+|---------|-------------|------|
+| 🔐 **Authinator** | Authentication, users, SSO, MFA | [losomode/AUTHinator](https://github.com/losomode/AUTHinator) |
+| 📦 **RMAinator** | Return merchandise tracking | [losomode/RMAinator](https://github.com/losomode/RMAinator) |
+| 🚚 **FULFILinator** | Order fulfillment (you are here) | [losomode/FULFILinator](https://github.com/losomode/FULFILinator) |
+
+See the [Inator Platform repo](https://github.com/losomode/inator) for the full architecture and how to run everything together.
 
 ## License
 
