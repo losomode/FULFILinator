@@ -1,129 +1,133 @@
 # FULFILinator
 
-Order fulfillment tracking system for managing Purchase Orders, Orders, and Deliveries.
+Order fulfillment tracking system for managing Purchase Orders, Orders, and Deliveries. Part of the **inator** microservice family.
 
 ## Architecture
 
-FULFILinator is part of a microservices architecture:
-- **Authinator** (Port 8001): Centralized authentication service
-- **RMAinator** (Port 8002): RMA tracking service
-- **FULFILinator** (Port 8003): Order fulfillment tracking service
+FULFILinator is a full-stack application with a Django REST backend and React/TypeScript frontend.
+
+- **Backend** — Django + DRF, SQLite (port 8003)
+- **Frontend** — React, TypeScript, Vite, Tailwind CSS (port 3000)
+- **Authinator** — Centralized auth service / JWT (port 8001)
+- **RMAinator** — RMA tracking, sibling service (port 8002)
+
+### Backend Apps
+
+- **core** — Authentication (JWT via Authinator), RBAC permissions, health check
+- **items** — Item catalog (name, version, MSRP, min price)
+- **purchase_orders** — PO lifecycle, fulfillment status tracking, quantity waiving, admin override close
+- **orders** — Order management, automatic PO allocation (oldest-first), ad-hoc orders
+- **deliveries** — Delivery tracking with serial numbers, over-delivery validation, order linking
+- **dashboard** — Metrics and analytics
+- **notifications** — Email notifications
+
+### Frontend Pages
+
+- **Purchase Orders** — List, create/edit, detail with fulfillment status, waive quantities, close with override
+- **Orders** — List, create/edit with PO allocation preview, detail with fulfillment tracking
+- **Deliveries** — List, create/edit with order linking, serial number entry, field-level validation errors
+- **Items** — Item catalog CRUD
+- **Serial Search** — Look up deliveries by serial number
 
 ## Quick Start
 
-### Development Setup (Local)
+### Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+- [Task](https://taskfile.dev/) (task runner)
+
+### Setup
 
 ```bash
-# Navigate to backend
-cd backend
+# Install all dependencies
+task install
 
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+# Run database migrations
+task backend:migrate
 
-# Install dependencies
-pip install -r requirements.txt
+# Start backend (port 8003)
+task backend:dev
 
-# Run migrations
-python manage.py migrate
+# In another terminal — start frontend (port 3000)
+task frontend:dev
+```
 
-# Run development server
-python manage.py runserver 8003
+### Common Tasks
+
+```bash
+task                      # List all available tasks
+task test:coverage        # Run all tests with coverage (≥85% threshold)
+task backend:test         # Run backend tests only
+task frontend:test        # Run frontend tests only
+task lint                 # Lint all code
+task check                # Pre-commit checks (fmt, lint, test, coverage)
+task build                # Production build
+task db:reset             # Reset database (destroys all data)
+task stats                # Show project statistics
 ```
 
 ## Testing
 
-### Run All Tests
-
 ```bash
-cd backend
-pytest
+# All tests with coverage
+task test:coverage
+
+# Backend only
+task backend:test
+task backend:test:coverage
+
+# Frontend only (239 tests, ≥85% function coverage)
+task frontend:test
+task frontend:test:coverage
 ```
 
-### Run Tests Without Coverage
+## Key Features
 
-```bash
-pytest --no-cov
-```
+- **PO → Order → Delivery pipeline** with automatic fulfillment status tracking at each level
+- **Automatic PO allocation** — orders draw from the oldest PO first, respecting quantities and prices
+- **Over-delivery prevention** — deliveries cannot exceed ordered quantities per line item
+- **Serial number tracking** — every delivered item requires a unique serial number
+- **Quantity waiving** — admins can waive remaining PO quantities with a reason
+- **Admin override close** — force-close POs/Orders with justification when items remain
+- **Field-level validation errors** — form fields highlight with the specific error from the API
+- **Attachment support** — file uploads on POs, Orders, and Deliveries
+- **Multi-tenant data isolation** — customers see only their own data
 
-### Run Specific Test File
+## User Roles
 
-```bash
-pytest core/test_authentication.py -v
-```
-
-### Run Tests with Verbose Output
-
-```bash
-pytest -v
-```
-
-### View Coverage Report
-
-After running tests, open `htmlcov/index.html` in your browser.
-
-## API Endpoints
-
-### Health Check
-- `GET /api/fulfil/health/` - Service health check (no auth required)
-
-### Authentication
-All endpoints (except health check) require JWT authentication via Authinator.
-
-**Authorization Header:**
-```
-Authorization: Bearer <jwt_token>
-```
+- **SYSTEM_ADMIN** — Full access to all data and features
+- **CUSTOMER_ADMIN** — Manage users and data for their customer
+- **CUSTOMER_USER** — View and edit their customer's data
+- **CUSTOMER_READONLY** — View-only access to their customer's data
 
 ## Project Structure
 
 ```
-FULFILinator/
+Fulfilinator/
 ├── backend/
 │   ├── config/              # Django settings & URLs
-│   ├── core/                # Authentication, permissions, utilities
-│   │   ├── authinator_client.py    # Authinator API client
-│   │   ├── authentication.py       # JWT authentication
-│   │   ├── permissions.py          # RBAC permissions
-│   │   └── views.py               # Health check
+│   ├── core/                # Auth, permissions, health check
 │   ├── items/               # Item catalog
-│   ├── purchase_orders/     # PO management
-│   ├── orders/              # Order management
-│   ├── deliveries/          # Delivery tracking
-│   ├── notifications/       # Email notifications
-│   └── dashboard/           # Metrics & analytics
-└── README.md               # This file
+│   ├── purchase_orders/     # PO management & fulfillment
+│   ├── orders/              # Order management & PO allocation
+│   ├── deliveries/          # Delivery tracking & serial numbers
+│   ├── dashboard/           # Metrics & analytics
+│   └── notifications/       # Email notifications
+├── frontend/
+│   └── src/
+│       ├── api/             # API clients & types
+│       ├── components/      # Shared UI components
+│       ├── hooks/           # Custom React hooks
+│       ├── pages/           # Route pages (POs, Orders, Deliveries, Items)
+│       └── utils/           # Auth utilities
+├── Taskfile.yml             # Project task runner
+└── README.md
 ```
-
-## User Roles
-
-- **SYSTEM_ADMIN**: Full access to all data and features
-- **CUSTOMER_ADMIN**: Manage users and data for their customer
-- **CUSTOMER_USER**: View and edit their customer's data
-- **CUSTOMER_READONLY**: View-only access to their customer's data
-
-## Development Status
-
-### ✅ Completed (Subphase 2.1)
-- Django project setup with 7 apps
-- Authinator integration (JWT validation)
-- Role-based access control (RBAC)
-- Permission system with customer data isolation
-- Health check endpoint
-- 39 tests with 92.57% coverage
-
-### 🚧 In Progress
-- Subphase 2.2: Item catalog
-- Subphase 2.3: Purchase order management
-
-### 📋 Planned
-- Subphase 2.4: Order management
-- Subphase 2.5: Delivery tracking
-- Phase 3: Advanced features (search, dashboard, notifications)
 
 ## Environment Variables
 
-Create a `.env` file in the `backend` directory:
+Create a `.env` file in the `backend/` directory:
 
 ```env
 DEBUG=True
@@ -133,34 +137,28 @@ AUTHINATOR_API_URL=http://localhost:8001/api/auth/
 AUTHINATOR_VERIFY_SSL=False
 ```
 
+## API
+
+All endpoints are under `/api/fulfil/` and require JWT authentication via Authinator (except the health check).
+
+```
+GET  /api/fulfil/health/                       # Health check (no auth)
+CRUD /api/fulfil/items/                        # Item catalog
+CRUD /api/fulfil/purchase-orders/              # Purchase orders
+POST /api/fulfil/purchase-orders/:id/close/    # Close PO
+POST /api/fulfil/purchase-orders/:id/waive/    # Waive quantity
+CRUD /api/fulfil/orders/                       # Orders
+POST /api/fulfil/orders/:id/close/             # Close order
+CRUD /api/fulfil/deliveries/                   # Deliveries
+POST /api/fulfil/deliveries/:id/close/         # Close delivery
+GET  /api/fulfil/deliveries/serial-search/?q=  # Serial lookup
+GET  /api/fulfil/dashboard/                    # Dashboard metrics
+```
+
 ## Contributing
 
-This project follows Deft TDD principles:
-1. Write tests first
-2. Implement features
-3. Maintain 80%+ code coverage
-4. All tests must pass before moving to next phase
-
-## Testing with Authinator
-
-To test cross-service authentication:
-
-1. Start Authinator service
-2. Create a user in Authinator and get a JWT token
-3. Use the token to access FULFILinator endpoints
-
-Example:
-```bash
-# Login to Authinator
-curl -X POST http://localhost:8001/api/auth/login/ \
-  -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "password"}'
-
-# Use the returned token
-curl http://localhost:8003/api/fulfil/health/ \
-  -H "Authorization: Bearer <access_token>"
-```
+This project follows TDD principles. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 
-Proprietary - Sighthound
+Proprietary — Sighthound
