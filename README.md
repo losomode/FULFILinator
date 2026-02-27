@@ -251,4 +251,4 @@ See the [Inator Platform repo](https://github.com/losomode/inator) for the full 
 
 ## License
 
-Proprietary — Sighthound
+MIT
