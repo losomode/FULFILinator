@@ -24,14 +24,14 @@ tasks:
   # === Backend Tasks ===
 
   backend:install:
-    desc: Install backend dependencies
-    dir: "{{.BACKEND_DIR}}"
+    desc: Create venv and install backend dependencies
     cmds:
-      - pip install -r requirements.txt
-    sources:
-      - requirements.txt
-    generates:
-      - "{{.BACKEND_DIR}}/venv/**"
+      - |
+        if [ ! -d "{{.ROOT_DIR}}/.venv" ]; then
+          echo "Creating virtual environment..."
+          python3 -m venv "{{.ROOT_DIR}}/.venv"
+        fi
+      - pip install -r "{{.BACKEND_DIR}}/requirements.txt"
 
   backend:migrate:
     desc: Run Django migrations
