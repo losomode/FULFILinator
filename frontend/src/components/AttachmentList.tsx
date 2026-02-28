@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getApiErrorMessage, Attachment } from '../api/types';
 import api from '../api/client';
 import Button from './Button';
@@ -6,9 +6,11 @@ import Button from './Button';
 interface AttachmentListProps {
   contentType: 'PO' | 'ORDER' | 'DELIVERY';
   objectId: number;
+  readOnly?: boolean;
 }
 
-const AttachmentList: React.FC<AttachmentListProps> = ({ contentType, objectId }) => {
+const AttachmentList: React.FC<AttachmentListProps> = ({ contentType, objectId, readOnly = false }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -23,7 +25,7 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ contentType, objectId }
     try {
       setLoading(true);
       const response = await api.get<{ results: Attachment[] }>(
-        `/api/fulfil/attachments/?content_type=${contentType}&object_id=${objectId}`
+        `/attachments/?content_type=${contentType}&object_id=${objectId}`
       );
       setAttachments(response.data.results);
       setError('');
@@ -45,7 +47,7 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ contentType, objectId }
 
     try {
       setUploading(true);
-      await api.post('/api/fulfil/attachments/', formData, {
+      await api.post('/attachments/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       await loadAttachments();
@@ -63,7 +65,7 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ contentType, objectId }
     if (!window.confirm('Are you sure you want to delete this attachment?')) return;
 
     try {
-      await api.delete(`/api/fulfil/attachments/${id}/`);
+      await api.delete(`/attachments/${id}/`);
       await loadAttachments();
       setError('');
     } catch (err: unknown) {
@@ -88,17 +90,24 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ contentType, objectId }
     <div className="bg-white shadow rounded-lg p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Attachments</h2>
-        <label className="cursor-pointer">
-          <input
-            type="file"
-            className="hidden"
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-          <Button variant="secondary" disabled={uploading}>
-            {uploading ? 'Uploading...' : 'Upload File'}
-          </Button>
-        </label>
+        {!readOnly && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+            <Button
+              variant="secondary"
+              disabled={uploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {uploading ? 'Uploading...' : 'Upload File'}
+            </Button>
+          </>
+        )}
       </div>
 
       {error && (
@@ -135,13 +144,15 @@ const AttachmentList: React.FC<AttachmentListProps> = ({ contentType, objectId }
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => handleDelete(attachment.id)}
-                className="text-red-600 hover:text-red-800 ml-2"
-                title="Delete attachment"
-              >
-                🗑️
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => handleDelete(attachment.id)}
+                  className="text-red-600 hover:text-red-800 ml-2"
+                  title="Delete attachment"
+                >
+                  🗑️
+                </button>
+              )}
             </div>
           ))}
         </div>

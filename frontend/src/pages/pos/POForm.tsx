@@ -7,6 +7,7 @@ import Button from '../../components/Button';
 import FormField from '../../components/FormField';
 import Loading from '../../components/Loading';
 import ErrorMessage from '../../components/ErrorMessage';
+import AttachmentList from '../../components/AttachmentList';
 
 const POForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -250,6 +251,12 @@ const POForm: React.FC = () => {
           </div>
         </form>
       </div>
+
+      {isEdit && id && (
+        <div className="mt-6">
+          <AttachmentList contentType="PO" objectId={parseInt(id)} />
+        </div>
+      )}
     </div>
   );
 };

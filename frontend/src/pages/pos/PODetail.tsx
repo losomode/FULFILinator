@@ -358,7 +358,7 @@ const PODetail: React.FC = () => {
 
       {/* Attachments */}
       <div className="mt-6">
-        <AttachmentList contentType="PO" objectId={po.id} />
+        <AttachmentList contentType="PO" objectId={po.id} readOnly />
       </div>
 
       {/* Waive Modal */}

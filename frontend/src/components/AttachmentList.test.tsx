@@ -94,7 +94,7 @@ describe('AttachmentList', () => {
     await waitFor(() => expect(screen.getByText('file.pdf')).toBeInTheDocument());
 
     fireEvent.click(screen.getByTitle('Delete attachment'));
-    await waitFor(() => expect(api.delete).toHaveBeenCalledWith('/api/fulfil/attachments/1/'));
+    await waitFor(() => expect(api.delete).toHaveBeenCalledWith('/attachments/1/'));
   });
 
   it('cancels delete on confirm=false', async () => {
@@ -154,5 +154,13 @@ describe('AttachmentList', () => {
     expect(screen.getByText('🖼️')).toBeInTheDocument();
     expect(screen.getByText('📊')).toBeInTheDocument();
     expect(screen.getByText('📎')).toBeInTheDocument();
+  });
+
+  it('hides upload button and delete icons in readOnly mode', async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: { results: [makeAttachment()] } });
+    render(<AttachmentList contentType="PO" objectId={1} readOnly />);
+    await waitFor(() => expect(screen.getByText('file.pdf')).toBeInTheDocument());
+    expect(screen.queryByText('Upload File')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Delete attachment')).not.toBeInTheDocument();
   });
 });
