@@ -103,17 +103,45 @@ graph LR
 Requires Python 3.11+, Node.js 18+, and [Task](https://taskfile.dev/) (`brew install go-task`).
 
 ```bash
-# Install everything
+# Clone the repo
+git clone https://github.com/losomode/FULFILinator.git
+cd Fulfilinator
+
+# Install dependencies
 task install
 
-# Database setup
+# Configure environment
+cp backend/.env.example backend/.env
+# Edit backend/.env to set AUTHINATOR_API_URL and other settings
+
+# Setup database
 task backend:migrate
 
 # Start backend (port 8003)
 task backend:dev
 
-# In another terminal — start frontend (port 3000)
+# In another terminal — start frontend (port 3003)
 task frontend:dev
+```
+
+### Troubleshooting Fresh Installs
+
+If services fail to start, check:
+
+```bash
+# Verify .env exists
+ls -la backend/.env
+
+# Run migrations if database doesn't exist
+task backend:migrate
+
+# Check that dependencies installed correctly
+ls -la .venv/                    # Backend venv should exist
+ls -la frontend/node_modules/    # Frontend deps should exist
+
+# View logs if running via platform orchestrator
+tail -50 /path/to/logs/Fulfilinator-backend.log
+tail -50 /path/to/logs/Fulfilinator-frontend.log
 ```
 
 ### Task Reference
