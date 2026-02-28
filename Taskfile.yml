@@ -26,12 +26,8 @@ tasks:
   backend:install:
     desc: Create venv and install backend dependencies
     cmds:
-      - |
-        if [ ! -d "{{.ROOT_DIR}}/.venv" ]; then
-          echo "Creating virtual environment..."
-          python3 -m venv "{{.ROOT_DIR}}/.venv"
-        fi
-      - pip install -r "{{.BACKEND_DIR}}/requirements.txt"
+      - test -d "{{.ROOT_DIR}}/.venv" || python3 -m venv "{{.ROOT_DIR}}/.venv"
+      - python -m pip install -r "{{.BACKEND_DIR}}/requirements.txt"
 
   backend:migrate:
     desc: Run Django migrations
