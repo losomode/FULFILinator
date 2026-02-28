@@ -186,17 +186,17 @@ SIMPLE_JWT = {
 # CORS settings
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:3002,http://localhost',
+    default='http://localhost:3003,http://localhost',
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 CORS_ALLOW_CREDENTIALS = True
 
 # Authinator API Configuration
-AUTHINATOR_API_URL = config('AUTHINATOR_API_URL', default='http://localhost:8000/api/auth/')
+AUTHINATOR_API_URL = config('AUTHINATOR_API_URL', default='http://localhost:8001/api/auth/')
 AUTHINATOR_VERIFY_SSL = config('AUTHINATOR_VERIFY_SSL', default=False, cast=bool)
 
 # Service Registry Configuration
-SERVICE_REGISTRY_URL = config('SERVICE_REGISTRY_URL', default='http://localhost:8000/api/services/register/')
+SERVICE_REGISTRY_URL = config('SERVICE_REGISTRY_URL', default='http://localhost:8001/api/services/register/')
 SERVICE_REGISTRATION_KEY = config('SERVICE_REGISTRATION_KEY', default='dev-service-key-change-in-production')
 
 # Email Configuration

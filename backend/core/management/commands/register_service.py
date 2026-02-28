@@ -18,9 +18,9 @@ class Command(BaseCommand):
         service_data = {
             'name': 'FULFILinator',
             'description': 'Order Fulfillment Tracking',
-            'base_url': 'http://localhost:8002',
+            'base_url': 'http://localhost:8003',
             'api_prefix': '/api/fulfil',
-            'ui_url': 'http://localhost:3002',
+            'ui_url': 'http://localhost:3003',
             'icon': '📦',
             'service_key': settings.SERVICE_REGISTRATION_KEY,
         }
