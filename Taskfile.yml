@@ -33,25 +33,25 @@ tasks:
     desc: Run Django migrations
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - python3 manage.py migrate
+      - "{{.ROOT_DIR}}/.venv/bin/python manage.py migrate"
 
   backend:makemigrations:
     desc: Create new Django migrations
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - python3 manage.py makemigrations
+      - "{{.ROOT_DIR}}/.venv/bin/python manage.py makemigrations"
 
   backend:test:
     desc: Run backend tests
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - python3 -m pytest -v
+      - "{{.ROOT_DIR}}/.venv/bin/python -m pytest -v"
 
   backend:test:coverage:
     desc: Run backend tests with coverage report
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - python3 -m pytest --cov=. --cov-report=html --cov-report=term
+      - "{{.ROOT_DIR}}/.venv/bin/python -m pytest --cov=. --cov-report=html --cov-report=term"
 
   backend:lint:
     desc: Lint backend code (if linter installed)
@@ -79,13 +79,19 @@ tasks:
     desc: Start Django development server
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - python3 manage.py runserver 8003
+      - "{{.ROOT_DIR}}/.venv/bin/python manage.py runserver 8003"
 
   backend:shell:
     desc: Open Django shell
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - python3 manage.py shell
+      - "{{.ROOT_DIR}}/.venv/bin/python manage.py shell"
+
+  backend:manage:
+    desc: "Run arbitrary Django management command (usage: task backend:manage -- command args)"
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - "{{.ROOT_DIR}}/.venv/bin/python manage.py {{.CLI_ARGS}}"
 
   # === Frontend Tasks ===
 
@@ -237,7 +243,7 @@ tasks:
     prompt: "This will delete all data. Continue?"
     cmds:
       - rm -f db.sqlite3
-      - python3 manage.py migrate
+      - "{{.ROOT_DIR}}/.venv/bin/python manage.py migrate"
       - echo "✓ Database reset complete"
 
   stats:
