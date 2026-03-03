@@ -93,7 +93,7 @@ graph LR
 | Layer | Stack |
 |-------|-------|
 | Backend | Python 3.11+, Django + DRF, SQLite (port **8003**) |
-| Frontend | TypeScript (strict), React 18, Vite, Tailwind CSS (port **3000**) |
+| Frontend | TypeScript (strict), React 19, Vite, Tailwind CSS (unified SPA) |
 | Auth | JWT via [Authinator](https://github.com/losomode/AUTHinator) |
 | Testing | pytest + coverage (backend), Vitest + RTL (frontend) |
 | Task Runner | [Task](https://taskfile.dev/) |
@@ -101,6 +101,20 @@ graph LR
 ## Quick Start
 
 Requires Python 3.11+, Node.js 18+, and [Task](https://taskfile.dev/) (`brew install go-task`).
+
+### Platform Mode (Recommended)
+
+If you're using the [Inator Platform](https://github.com/losomode/inator):
+
+```bash
+# From the platform root (inator/)
+task setup           # Sets up all inators including Fulfilinator
+task start:all       # Starts all services + unified frontend + gateway
+
+# Access at http://localhost:8080
+```
+
+### Standalone Mode
 
 ```bash
 # Clone the repo
@@ -120,9 +134,11 @@ task backend:migrate
 # Start backend (port 8003)
 task backend:dev
 
-# In another terminal — start frontend (port 3003)
+# In another terminal — start frontend (port 3003, standalone only)
 task frontend:dev
 ```
+
+**Note**: When running via the Inator Platform, the frontend is served from the unified SPA at `inator/frontend/`. The standalone frontend is only for isolated development.
 
 ### Troubleshooting Fresh Installs
 
@@ -191,6 +207,8 @@ task frontend:typecheck      # TypeScript strict mode
 📎 **Attachments** — Upload files to POs, Orders, or Deliveries. Link Google Docs and HubSpot deals on POs.
 
 🔒 **Multi-Tenant Isolation** — Customers see only their own data. Admins see everything.
+
+🎨 **Unified UI** — Integrated into the platform's single-page React app with dark/light mode support.
 
 ## Roles
 
