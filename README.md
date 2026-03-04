@@ -281,6 +281,45 @@ AUTHINATOR_API_URL=http://localhost:8001/api/auth/
 AUTHINATOR_VERIFY_SSL=False
 ```
 
+For Docker, set `SQLITE_PATH=/app/backend/data/db.sqlite3` so data persists in the named volume.
+
+## 🌐 Deployment
+
+### Docker Deployment (Recommended)
+
+FULFILinator ships with a `Dockerfile` and is orchestrated by the [Inator Platform](https://github.com/losomode/inator) via Docker Compose.
+
+```bash
+# From the platform root (inator/)
+docker compose -f docker-compose.dev.yml up --build   # Development
+docker compose up --build                             # Production
+```
+
+SQLite data is persisted in a named Docker volume (`fulfilinator_data`). The database file lives at `/app/backend/data/db.sqlite3` inside the container.
+
+To run Django management commands inside the container:
+
+```bash
+# Migrations
+docker compose -f docker-compose.dev.yml exec fulfilinator python backend/manage.py migrate
+
+# Create superuser
+docker compose -f docker-compose.dev.yml exec fulfilinator python backend/manage.py createsuperuser
+```
+
+See the platform [docker-compose.dev.yml](https://github.com/losomode/inator/blob/main/docker-compose.dev.yml) and [docker-compose.yml](https://github.com/losomode/inator/blob/main/docker-compose.yml) for the full configuration.
+
+### Production Checklist
+
+- [ ] Set `DEBUG=False` in environment
+- [ ] Configure strong `SECRET_KEY`
+- [ ] Set `ALLOWED_HOSTS` correctly
+- [ ] Configure Authinator connection
+- [ ] Configure SQLite path via `SQLITE_PATH` env var (default: `backend/db.sqlite3`)
+- [ ] Set up HTTPS/TLS
+- [ ] Run migrations: `python backend/manage.py migrate`
+- [ ] Collect static files: `python backend/manage.py collectstatic`
+
 ## 📦 Repository
 
 **GitHub**: [losomode/FULFILinator](https://github.com/losomode/FULFILinator)
