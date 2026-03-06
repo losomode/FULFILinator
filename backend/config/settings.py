@@ -228,6 +228,10 @@ AUTHINATOR_VERIFY_SSL = config('AUTHINATOR_VERIFY_SSL', default=False, cast=bool
 SERVICE_REGISTRY_URL = config('SERVICE_REGISTRY_URL', default='http://localhost:8001/api/services/register/')
 SERVICE_REGISTRATION_KEY = config('SERVICE_REGISTRATION_KEY', default='dev-service-key-change-in-production')
 
+# USERinator integration — for user profile lookups and role_level
+USERINATOR_API_URL = config('USERINATOR_API_URL', default='http://localhost:8004/api/users/')
+USERINATOR_SERVICE_KEY = config('USERINATOR_SERVICE_KEY', default='dev-internal-service-key-change-in-production')
+
 # Email Configuration
 # Use console backend for development (prints emails to console)
 # In production, set EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'

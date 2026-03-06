@@ -53,6 +53,7 @@ class AuthinatorClient:
                     'username': user_data.get('username'),
                     'email': user_data.get('email'),
                     'role': user_data.get('role'),
+                    'role_level': user_data.get('role_level', 0),
                     'customer_id': user_data.get('customer', {}).get('id') if user_data.get('customer') else None,
                     'customer_name': user_data.get('customer', {}).get('name') if user_data.get('customer') else None,
                     'is_verified': user_data.get('is_verified', False),

@@ -12,6 +12,9 @@ class AuthinatorUser:
     """
     Simple user object to store information fetched from Authinator.
     This is not a Django model, just a container for user data.
+
+    Supports both legacy role strings ('ADMIN'/'USER') and the newer
+    role_level system from USERinator-enriched JWTs.
     """
     
     def __init__(self, user_data):
@@ -19,6 +22,7 @@ class AuthinatorUser:
         self.username = user_data['username']
         self.email = user_data['email']
         self.role = user_data['role']
+        self.role_level = user_data.get('role_level', 0)
         self.customer_id = user_data.get('customer_id')
         self.customer_name = user_data.get('customer_name')
         self.is_verified = user_data.get('is_verified', False)
@@ -27,7 +31,13 @@ class AuthinatorUser:
     
     @property
     def is_admin(self):
-        """Check if user is an admin (handles both current and legacy Authinator role names)."""
+        """Check if user is an admin.
+
+        Uses role_level when available (from USERinator-enriched JWT),
+        falls back to legacy Authinator role names.
+        """
+        if self.role_level:
+            return self.role_level >= 100
         return self.role in ('ADMIN', 'SYSTEM_ADMIN', 'CUSTOMER_ADMIN')
     
     # Legacy aliases
