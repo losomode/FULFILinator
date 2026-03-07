@@ -51,7 +51,7 @@ class AuthinatorUser:
         Uses role_level when available (from USERinator-enriched JWT),
         falls back to legacy Authinator role names.
         """
-        if self.role_level:
+        if self.role_level is not None:
             return self.role_level >= 100
         return self.role in ('ADMIN', 'SYSTEM_ADMIN', 'CUSTOMER_ADMIN')
     
