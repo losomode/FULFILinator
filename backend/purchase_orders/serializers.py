@@ -4,7 +4,7 @@ Serializers for purchase_orders app.
 from rest_framework import serializers
 from items.models import Item
 from purchase_orders.models import PurchaseOrder, POLineItem
-from core.authinator_client import authinator_client
+from core.userinator_client import userinator_client
 
 
 class POLineItemSerializer(serializers.ModelSerializer):
@@ -95,10 +95,10 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     
     def get_customer_name(self, obj):
         """
-        Get customer name from AUTHinator.
+        Get customer name from USERinator.
         """
-        customer_data = authinator_client.get_customer(obj.customer_id)
-        return customer_data['name'] if customer_data else None
+        company_data = userinator_client.get_company(obj.customer_id)
+        return company_data['name'] if company_data else None
     
     def get_fulfillment_status(self, obj):
         """

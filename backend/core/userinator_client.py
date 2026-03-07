@@ -22,6 +22,47 @@ class UserinatorClient:
         self.api_url = settings.USERINATOR_API_URL
         self.service_key = settings.USERINATOR_SERVICE_KEY
 
+    def get_user_context(self, user_id, token=None):
+        """
+        Fetch full user context including role_level, company, and permissions.
+        
+        Args:
+            user_id: User ID to fetch context for
+            token: Bearer token for authorization (optional, will use service key if not provided)
+        
+        Returns:
+            dict with context data including role_level, company_id, permissions, or None.
+        """
+        cache_key = f"userinator_context_{user_id}"
+        cached = cache.get(cache_key)
+        if cached:
+            return cached
+        
+        headers = {"X-Service-Key": self.service_key}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        
+        try:
+            response = requests.get(
+                f"{self.api_url}{user_id}/context/",
+                headers=headers,
+                timeout=3,
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                cache.set(cache_key, data, self.CACHE_TTL)
+                return data
+            
+            logger.info(
+                "USERinator context fetch for user %s returned %s",
+                user_id, response.status_code,
+            )
+        except requests.RequestException as exc:
+            logger.warning("USERinator unreachable for context %s: %s", user_id, exc)
+        
+        return None
+
     def get_user_profile(self, user_id):
         """
         Fetch profile data for a user from USERinator.
@@ -53,6 +94,55 @@ class UserinatorClient:
         except requests.RequestException as exc:
             logger.warning("USERinator unreachable for profile %s: %s", user_id, exc)
 
+        return None
+
+    def get_company(self, company_id):
+        """
+        Fetch company data from USERinator.
+        
+        Args:
+            company_id: Company ID to fetch (can be string or int)
+        
+        Returns:
+            dict with company data (id, name), or None if unavailable.
+        """
+        if not company_id:
+            return None
+        
+        # Normalize to int for cache key
+        try:
+            company_id_int = int(company_id)
+        except (ValueError, TypeError):
+            logger.warning("Invalid company_id: %s", company_id)
+            return None
+        
+        cache_key = f"userinator_company_{company_id_int}"
+        cached = cache.get(cache_key)
+        if cached:
+            return cached
+        
+        try:
+            # USERinator companies endpoint is /api/companies/{id}/
+            company_url = settings.USERINATOR_API_URL.replace("/api/users/", "/api/companies/")
+            response = requests.get(
+                f"{company_url}{company_id_int}/",
+                headers={"X-Service-Key": self.service_key},
+                timeout=3,
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                # Cache for 1 hour (companies change less frequently)
+                cache.set(cache_key, data, 3600)
+                return data
+            
+            logger.info(
+                "USERinator company fetch for %s returned %s",
+                company_id, response.status_code,
+            )
+        except requests.RequestException as exc:
+            logger.warning("USERinator unreachable for company %s: %s", company_id, exc)
+        
         return None
 
     def get_profiles_batch(self, user_ids, token=None):

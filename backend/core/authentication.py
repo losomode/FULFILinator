@@ -3,9 +3,13 @@ Custom authentication classes for FULFILinator.
 
 Authenticates requests by validating JWT tokens with Authinator.
 """
+import logging
 from rest_framework import authentication
 from rest_framework import exceptions
 from core.authinator_client import authinator_client
+from core.userinator_client import userinator_client
+
+logger = logging.getLogger(__name__)
 
 
 class AuthinatorUser:
@@ -17,14 +21,25 @@ class AuthinatorUser:
     role_level system from USERinator-enriched JWTs.
     """
     
-    def __init__(self, user_data):
+    def __init__(self, user_data, context_data=None):
         self.id = user_data['id']
         self.username = user_data['username']
         self.email = user_data['email']
-        self.role = user_data['role']
-        self.role_level = user_data.get('role_level', 0)
-        self.customer_id = user_data.get('customer_id')
-        self.customer_name = user_data.get('customer_name')
+        
+        # Prefer USERinator context data over AUTHinator data
+        if context_data:
+            self.role = context_data.get('role_name', '')
+            self.role_level = context_data.get('role_level', 0)
+            self.customer_id = context_data.get('company_id')  # USERinator uses company_id
+            self.company_id_remote = context_data.get('company_id')
+            self.customer_name = context_data.get('company_name')
+        else:
+            self.role = user_data['role']
+            self.role_level = user_data.get('role_level', 0)
+            self.customer_id = user_data.get('customer_id')
+            self.company_id_remote = user_data.get('customer_id')
+            self.customer_name = user_data.get('customer_name')
+        
         self.is_verified = user_data.get('is_verified', False)
         self.is_active = user_data.get('is_active', False)
         self.is_authenticated = True
@@ -96,7 +111,18 @@ class AuthinatorJWTAuthentication(authentication.BaseAuthentication):
         if not user_data.get('is_active'):
             raise exceptions.AuthenticationFailed('User account is not active')
         
-        # Create user object
-        user = AuthinatorUser(user_data)
+        # Fetch full context from USERinator (role_level, company, permissions)
+        user_id = user_data.get('id')
+        context_data = None
+        if user_id:
+            context_data = userinator_client.get_user_context(user_id, token)
+            if not context_data:
+                logger.warning(
+                    f'Failed to fetch USERinator context for user {user_id}, '
+                    'falling back to AUTHinator data'
+                )
+        
+        # Create user object with USERinator context
+        user = AuthinatorUser(user_data, context_data)
         
         return (user, token)
