@@ -32,12 +32,10 @@ class UserinatorClient:
         
         Returns:
             dict with context data including role_level, company_id, permissions, or None.
-        """
-        cache_key = f"userinator_context_{user_id}"
-        cached = cache.get(cache_key)
-        if cached:
-            return cached
         
+        NOTE: Caching removed to prevent stale permission/role data.
+        USERinator caches on its side, so we don't need to cache here.
+        """
         headers = {"X-Service-Key": self.service_key}
         if token:
             headers["Authorization"] = f"Bearer {token}"
@@ -51,7 +49,6 @@ class UserinatorClient:
             
             if response.status_code == 200:
                 data = response.json()
-                cache.set(cache_key, data, self.CACHE_TTL)
                 return data
             
             logger.info(
@@ -70,11 +67,6 @@ class UserinatorClient:
         Returns:
             dict with profile data, or None if unavailable.
         """
-        cache_key = f"userinator_profile_{user_id}"
-        cached = cache.get(cache_key)
-        if cached:
-            return cached
-
         try:
             response = requests.get(
                 f"{self.api_url}{user_id}/",
@@ -84,7 +76,6 @@ class UserinatorClient:
 
             if response.status_code == 200:
                 data = response.json()
-                cache.set(cache_key, data, self.CACHE_TTL)
                 return data
 
             logger.info(

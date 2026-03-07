@@ -29,13 +29,10 @@ class AuthinatorClient:
         Returns:
             dict: User information including id, username, email, role, customer_id
             None: If token is invalid or request fails
-        """
-        # Check cache first (cache for 5 minutes)
-        cache_key = f'authinator_user_{token[:20]}'
-        cached_user = cache.get(cache_key)
-        if cached_user:
-            return cached_user
         
+        NOTE: Caching removed to prevent stale permission/role data.
+        The AUTHinator /me/ endpoint should be fast enough without caching.
+        """
         try:
             response = requests.get(
                 f'{self.api_url}me/',
@@ -59,9 +56,6 @@ class AuthinatorClient:
                     'is_verified': user_data.get('is_verified', False),
                     'is_active': user_data.get('is_active', False),
                 }
-                
-                # Cache the result
-                cache.set(cache_key, user_info, 300)  # 5 minutes
                 
                 return user_info
             else:
