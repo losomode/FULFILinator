@@ -80,10 +80,16 @@ class CustomerDataIsolation(permissions.BasePermission):
         
         # Check if object belongs to user's company
         user_company = getattr(request.user, 'company_id_remote', None)
+        if user_company is None:
+            return False
+        
+        # Normalize to string for comparison (models use CharField for customer_id)
+        user_company_str = str(user_company)
+        
         if hasattr(obj, 'company_id'):
-            return obj.company_id == user_company
-        # Legacy support for customer_id
+            return str(obj.company_id) == user_company_str
+        # Legacy support for customer_id (CharField in models)
         elif hasattr(obj, 'customer_id'):
-            return obj.customer_id == user_company
+            return str(obj.customer_id) == user_company_str
         
         return False
