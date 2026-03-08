@@ -6,7 +6,6 @@ user/customer information from the Authinator service.
 """
 import requests
 from django.conf import settings
-from django.core.cache import cache
 import logging
 
 logger = logging.getLogger(__name__)
@@ -94,12 +93,7 @@ class AuthinatorClient:
         if not customer_id:
             return None
         
-        # Check cache first (cache for 1 hour)
-        cache_key = f'authinator_customer_{customer_id}'
-        cached_customer = cache.get(cache_key)
-        if cached_customer:
-            return cached_customer
-        
+        # NO CACHING - customer data must be fresh to avoid stale permission issues
         try:
             response = requests.get(
                 f'{self.api_url}customers/{customer_id}/',
@@ -109,10 +103,6 @@ class AuthinatorClient:
             
             if response.status_code == 200:
                 customer_data = response.json()
-                
-                # Cache the result for 1 hour
-                cache.set(cache_key, customer_data, 3600)
-                
                 return customer_data
             else:
                 logger.warning(f'Failed to fetch customer {customer_id} from Authinator: {response.status_code}')

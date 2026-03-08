@@ -8,7 +8,6 @@ import logging
 
 import requests
 from django.conf import settings
-from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -100,18 +99,14 @@ class UserinatorClient:
         if not company_id:
             return None
         
-        # Normalize to int for cache key
+        # Normalize to int
         try:
             company_id_int = int(company_id)
         except (ValueError, TypeError):
             logger.warning("Invalid company_id: %s", company_id)
             return None
         
-        cache_key = f"userinator_company_{company_id_int}"
-        cached = cache.get(cache_key)
-        if cached:
-            return cached
-        
+        # NO CACHING - company data must be fresh to avoid stale permission issues
         try:
             # USERinator companies endpoint is /api/companies/{id}/
             company_url = settings.USERINATOR_API_URL.replace("/api/users/", "/api/companies/")
@@ -123,8 +118,6 @@ class UserinatorClient:
             
             if response.status_code == 200:
                 data = response.json()
-                # Cache for 1 hour (companies change less frequently)
-                cache.set(cache_key, data, 3600)
                 return data
             
             logger.info(
