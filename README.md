@@ -138,6 +138,24 @@ task backend:dev
 task frontend:dev
 ```
 
+### Demo Database
+
+The Inator Platform provides a complete demo database with realistic purchase orders, orders, and deliveries. See the [Demo Database Guide](https://github.com/losomode/inator/blob/main/docs/DEMO_DATABASE.md) for full details.
+
+```bash
+# From the platform root (inator/)
+task setup:demodb        # Build demo databases
+task demodb:activate     # Activate demo data
+task restart:all         # Restart all services
+```
+
+**Demo data includes:**
+- 4 purchase orders (one per company)
+- 5 orders with realistic allocation from POs
+- 5 deliveries with tracking numbers and serial numbers
+- 6 catalog items (cameras, sensors, locks, alarms, NVR)
+- Complete RBAC filtering by company
+
 **Note**: When running via the Inator Platform, the frontend is served from the unified SPA at `inator/frontend/`. The standalone frontend is only for isolated development.
 
 ### Troubleshooting Fresh Installs
@@ -210,16 +228,32 @@ task frontend:typecheck      # TypeScript strict mode
 
 🎨 **Unified UI** — Integrated into the platform's single-page React app with dark/light mode support.
 
-## Roles
+## Roles & RBAC
 
-| Role | Scope |
-|------|-------|
-| **SYSTEM_ADMIN** | Full access to all data and features across all customers |
-| **CUSTOMER_ADMIN** | Manage users and data within their customer account |
-| **CUSTOMER_USER** | View and edit their customer's POs, orders, and deliveries |
-| **CUSTOMER_READONLY** | View-only access to their customer's data |
+FULFILinator enforces company-scoped access control:
+
+| Role | Level | Scope |
+|------|-------|-------|
+| **ADMIN** | 100 | Full access to all data across all companies, can manage items catalog |
+| **MANAGER** | 30 | View company POs/Orders/Deliveries, cannot edit or access items catalog |
+| **MEMBER** | 10 | View company data only, read-only access |
 
 Roles come from the JWT issued by [Authinator](https://github.com/losomode/AUTHinator). FULFILinator never stores credentials.
+
+### RBAC Filtering
+
+- **Platform admins** (no company affiliation):
+  - View and manage all POs, orders, and deliveries across all companies
+  - Full access to items catalog (create/edit/delete items)
+  - Can see cross-company analytics and reports
+
+- **Company users** (managers and members):
+  - View only their own company's POs, orders, and deliveries
+  - Cannot see other companies' data
+  - Cannot access items catalog (ADMIN only)
+  - Managers and members have same view scope (company-scoped)
+
+See the [Demo Database Guide](https://github.com/losomode/inator/blob/main/docs/DEMO_DATABASE.md) for examples testing RBAC with different user accounts.
 
 ## API
 
