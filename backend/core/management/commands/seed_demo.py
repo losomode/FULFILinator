@@ -19,13 +19,13 @@ from orders.models import Order, OrderLineItem
 from deliveries.models import Delivery, DeliveryLineItem
 
 
-# ── Authinator ID mapping (must match Authinator seed_demo output) ───
-# Customer IDs: 1=Platform Admin, 2=Meridian, 3=Apex, 4=Coastal
-# User IDs: 1=admin, 2=sarah.chen, 3=james.wilson, 4=lisa.patel,
-#            5=mike.torres, 6=emma.jackson
-MERIDIAN_CID = '2'
-APEX_CID = '3'
-COASTAL_CID = '4'
+# ── USERinator ID mapping (must match USERinator seed_demo output) ───
+# Company IDs: 1=Acme Corporation, 2=Globex Industries, 3=Initech LLC, 4=Wayne Enterprises
+# User IDs: 1=admin, 2=alice.admin, 101=bob.manager, 102=carol.member, etc.
+ACME_CID = '1'
+GLOBEX_CID = '2'
+INITECH_CID = '3'
+WAYNE_CID = '4'
 ADMIN_UID = '1'
 
 # Relative dates (days before "today")
@@ -86,17 +86,21 @@ class Command(BaseCommand):
     # ── Purchase Orders ──────────────────────────────────────────────
     def _create_pos(self, items):
         po_specs = [
-            ('PO-20250115-0001', MERIDIAN_CID, days_ago(70), days_ago(70) + timedelta(days=180),
+            ('PO-20250115-0001', ACME_CID, days_ago(70), days_ago(70) + timedelta(days=180),
              'Initial camera and node deployment',
              [('Camera LR 2.0', 20, Decimal('1099.00')),
               ('Node 4.6', 10, Decimal('2099.00')),
               ('Mounting Kit Pro', 5, Decimal('129.00'))]),
-            ('PO-20250201-0001', APEX_CID, days_ago(27), days_ago(27) + timedelta(days=120),
+            ('PO-20250201-0001', GLOBEX_CID, days_ago(27), days_ago(27) + timedelta(days=120),
              'Factory floor monitoring expansion',
              [('Camera SR 1.5', 50, Decimal('649.00')),
               ('Node 4.6 GA', 25, Decimal('1899.00'))]),
-            ('PO-20250215-0001', COASTAL_CID, days_ago(13), days_ago(13) + timedelta(days=90),
-             'Branch office security upgrade',
+            ('PO-20250215-0001', INITECH_CID, days_ago(13), days_ago(13) + timedelta(days=90),
+             'Software development office setup',
+             [('Camera LR 2.0', 10, Decimal('1149.00')),
+              ('Node 4.6', 5, Decimal('2199.00'))]),
+            ('PO-20250301-0001', WAYNE_CID, days_ago(5), days_ago(5) + timedelta(days=90),
+             'Enterprise security system',
              [('Camera LR 2.0', 15, Decimal('1149.00')),
               ('Camera SR 1.5', 15, Decimal('699.00')),
               ('Node 4.6', 10, Decimal('2199.00'))]),
@@ -128,19 +132,20 @@ class Command(BaseCommand):
         order_specs = [
             # (order_num, customer_id, notes, status, days_ago, line_items)
             # line_items: (item_key, qty, price, po_line_key_or_None)
-            ('ORD-20250120-0001', MERIDIAN_CID, 'Phase 1 deployment', 'OPEN', 65,
+            ('ORD-20250120-0001', ACME_CID, 'Phase 1 deployment', 'OPEN', 65,
              [('Camera LR 2.0', 10, Decimal('1099.00'), 'PO-20250115-0001:Camera LR 2.0'),
               ('Node 4.6', 5, Decimal('2099.00'), 'PO-20250115-0001:Node 4.6')]),
-            ('ORD-20250125-0001', MERIDIAN_CID, 'Mounting hardware for phase 1', 'CLOSED', 60,
+            ('ORD-20250125-0001', ACME_CID, 'Mounting hardware for phase 1', 'CLOSED', 60,
              [('Mounting Kit Pro', 3, Decimal('129.00'), 'PO-20250115-0001:Mounting Kit Pro')]),
-            ('ORD-20250205-0001', APEX_CID, 'Factory floor cameras batch 1', 'OPEN', 23,
+            ('ORD-20250205-0001', GLOBEX_CID, 'Factory floor cameras batch 1', 'OPEN', 23,
              [('Camera SR 1.5', 20, Decimal('649.00'), 'PO-20250201-0001:Camera SR 1.5'),
               ('Node 4.6 GA', 10, Decimal('1899.00'), 'PO-20250201-0001:Node 4.6 GA')]),
-            ('ORD-20250220-0001', COASTAL_CID, 'Initial branch rollout', 'OPEN', 8,
+            ('ORD-20250220-0001', INITECH_CID, 'Development office cameras', 'OPEN', 8,
              [('Camera LR 2.0', 5, Decimal('1149.00'), 'PO-20250215-0001:Camera LR 2.0'),
-              ('Camera SR 1.5', 5, Decimal('699.00'), 'PO-20250215-0001:Camera SR 1.5')]),
-            ('ORD-20250225-0001', APEX_CID, 'Ad-hoc license key request', 'OPEN', 3,
-             [('License Dongle', 5, Decimal('45.00'), None)]),
+              ('Node 4.6', 2, Decimal('2199.00'), 'PO-20250215-0001:Node 4.6')]),
+            ('ORD-20250225-0001', WAYNE_CID, 'Initial security deployment', 'OPEN', 3,
+             [('Camera LR 2.0', 10, Decimal('1149.00'), 'PO-20250301-0001:Camera LR 2.0'),
+              ('Camera SR 1.5', 10, Decimal('699.00'), 'PO-20250301-0001:Camera SR 1.5')]),
         ]
         order_lines = {}
         for ord_num, cid, notes, status, ago, line_specs in order_specs:
@@ -174,16 +179,20 @@ class Command(BaseCommand):
     # ── Deliveries ───────────────────────────────────────────────────
     def _create_deliveries(self, items, order_lines):
         delivery_specs = [
-            ('DEL-20250201-0001', MERIDIAN_CID, days_ago(27), '1Z999AA10123456784', 'CLOSED', 27,
-             [('Camera LR 2.0', 'CLR-M', 1, 6, 'ORD-20250120-0001:Camera LR 2.0'),
-              ('Node 4.6', 'N46-M', 1, 3, 'ORD-20250120-0001:Node 4.6')]),
-            ('DEL-20250210-0001', MERIDIAN_CID, days_ago(18), '1Z999AA10123456785', 'CLOSED', 18,
-             [('Mounting Kit Pro', 'MKP-M', 1, 3, 'ORD-20250125-0001:Mounting Kit Pro')]),
-            ('DEL-20250210-0002', APEX_CID, days_ago(18), '1Z999AA10234567891', 'CLOSED', 18,
-             [('Camera SR 1.5', 'CSR-A', 1, 10, 'ORD-20250205-0001:Camera SR 1.5'),
-              ('Node 4.6 GA', 'NGA-A', 1, 5, 'ORD-20250205-0001:Node 4.6 GA')]),
-            ('DEL-20250220-0001', APEX_CID, days_ago(8), '1Z999AA10234567892', 'OPEN', 8,
-             [('Camera SR 1.5', 'CSR-A', 11, 15, 'ORD-20250205-0001:Camera SR 1.5')]),
+            ('DEL-20250201-0001', ACME_CID, days_ago(27), '1Z999AA10123456784', 'CLOSED', 27,
+             [('Camera LR 2.0', 'CLR-A', 1, 6, 'ORD-20250120-0001:Camera LR 2.0'),
+              ('Node 4.6', 'N46-A', 1, 3, 'ORD-20250120-0001:Node 4.6')]),
+            ('DEL-20250210-0001', ACME_CID, days_ago(18), '1Z999AA10123456785', 'CLOSED', 18,
+             [('Mounting Kit Pro', 'MKP-A', 1, 3, 'ORD-20250125-0001:Mounting Kit Pro')]),
+            ('DEL-20250210-0002', GLOBEX_CID, days_ago(18), '1Z999AA10234567891', 'CLOSED', 18,
+             [('Camera SR 1.5', 'CSR-G', 1, 10, 'ORD-20250205-0001:Camera SR 1.5'),
+              ('Node 4.6 GA', 'NGA-G', 1, 5, 'ORD-20250205-0001:Node 4.6 GA')]),
+            ('DEL-20250220-0001', INITECH_CID, days_ago(8), '1Z999AA10234567892', 'OPEN', 8,
+             [('Camera LR 2.0', 'CLR-I', 1, 5, 'ORD-20250220-0001:Camera LR 2.0'),
+              ('Node 4.6', 'N46-I', 1, 2, 'ORD-20250220-0001:Node 4.6')]),
+            ('DEL-20250301-0001', WAYNE_CID, days_ago(2), '1Z999AA10234567893', 'OPEN', 2,
+             [('Camera LR 2.0', 'CLR-W', 1, 10, 'ORD-20250225-0001:Camera LR 2.0'),
+              ('Camera SR 1.5', 'CSR-W', 1, 10, 'ORD-20250225-0001:Camera SR 1.5')]),
         ]
         for del_num, cid, ship, tracking, status, ago, line_specs in delivery_specs:
             delivery, created = Delivery.objects.get_or_create(
