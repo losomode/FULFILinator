@@ -93,7 +93,7 @@ graph LR
 | Layer | Stack |
 |-------|-------|
 | Backend | Python 3.11+, Django + DRF, SQLite (port **8003**) |
-| Frontend | TypeScript (strict), React 19, Vite, Tailwind CSS (unified SPA) |
+| Frontend | TypeScript (strict), React 19, Vite, Tailwind CSS 4 (own SPA at `/fulfil/`) |
 | Auth | JWT via [Authinator](https://github.com/losomode/AUTHinator) |
 | Testing | pytest + coverage (backend), Vitest + RTL (frontend) |
 | Task Runner | [Task](https://taskfile.dev/) |
@@ -156,7 +156,7 @@ task restart:all         # Restart all services
 - 6 catalog items (cameras, sensors, locks, alarms, NVR)
 - Complete RBAC filtering by company
 
-**Note**: When running via the Inator Platform, the frontend is served from the unified SPA at `inator/frontend/`. The standalone frontend is only for isolated development.
+**Note**: Each inator serves its own frontend SPA. When running via the Inator Platform, access all services through the Caddy gateway at `http://localhost:8080`. Fulfilinator's frontend is served at `/fulfil/`.
 
 ### Troubleshooting Fresh Installs
 
@@ -292,13 +292,16 @@ Fulfilinator/
 │   ├── deliveries/          # Delivery tracking & serial numbers
 │   ├── dashboard/           # Metrics & analytics
 │   └── notifications/       # Email notifications
-├── frontend/
-│   └── src/
-│       ├── api/             # Axios clients & TypeScript types
-│       ├── components/      # Shared UI (Button, FormField, Layout, etc.)
-│       ├── hooks/           # Custom hooks (useUser)
-│       ├── pages/           # POs, Orders, Deliveries, Items, Serial Search
-│       └── utils/           # Auth utilities
+├── frontend/                # React SPA (served at /fulfil/ via Caddy)
+│   ├── src/
+│   │   ├── App.tsx          # BrowserRouter (basename=/fulfil) + routes
+│   │   ├── main.tsx         # Entry point
+│   │   ├── pages/           # POs, Orders, Deliveries, Items, Serial Search
+│   │   ├── components/      # AttachmentList
+│   │   ├── api.ts           # Fulfil-specific API calls
+│   │   └── types.ts         # Fulfil-specific types
+│   ├── vite.config.ts       # base=/fulfil/, @inator/shared alias, Tailwind v4
+│   └── package.json
 ├── Taskfile.yml             # Project task runner
 └── README.md
 ```
