@@ -20,7 +20,8 @@ class Command(BaseCommand):
             'description': 'Order Fulfillment Tracking',
             'base_url': 'http://localhost:8003',
             'api_prefix': '/api/fulfil',
-            'ui_url': 'http://localhost:3003',
+            'ui_url': 'http://localhost:8080/fulfil',
+            'ui_path': '/fulfil',
             'icon': '📦',
             'service_key': settings.SERVICE_REGISTRATION_KEY,
         }

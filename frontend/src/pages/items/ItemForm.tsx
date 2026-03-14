@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { itemsApi } from '../../api/items';
-import { getApiErrorMessage, Item } from '../../api/types';
-import Button from '../../components/Button';
-import FormField from '../../components/FormField';
-import Loading from '../../components/Loading';
-import ErrorMessage from '../../components/ErrorMessage';
+import { itemsApi } from '../../api';
+import { getFulfilErrorMessage } from '../../types';
+import type { Item } from '../../types';
+import { useAuth } from '@inator/shared/auth/AuthProvider';
 
-const ItemForm: React.FC = () => {
+/** Form for creating or editing a catalog item. */
+export function ItemForm(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isEdit = Boolean(id);
 
   const [loading, setLoading] = useState(false);
@@ -20,39 +20,40 @@ const ItemForm: React.FC = () => {
     description: '',
     msrp: '',
     min_price: '',
-    created_by_user_id: 'user-001', // Mock user ID
+    created_by_user_id: user?.username ?? '',
   });
 
   useEffect(() => {
     if (isEdit && id) {
-      loadItem(parseInt(id));
+      void loadItem(parseInt(id));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isEdit]);
 
-  const loadItem = async (itemId: number) => {
+  const loadItem = async (itemId: number): Promise<void> => {
     try {
       setLoading(true);
       const data = await itemsApi.get(itemId);
       setFormData({
         name: data.name,
         version: data.version,
-        description: data.description || '',
+        description: data.description ?? '',
         msrp: data.msrp,
         min_price: data.min_price,
-        created_by_user_id: data.created_by_user_id || 'user-001',
+        created_by_user_id: data.created_by_user_id ?? user?.username ?? '',
       });
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, 'Failed to load item'));
+      setError(getFulfilErrorMessage(err, 'Failed to load item'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError('');
 
@@ -64,77 +65,127 @@ const ItemForm: React.FC = () => {
       }
       navigate('/items');
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, `Failed to ${isEdit ? 'update' : 'create'} item`));
+      setError(getFulfilErrorMessage(err, `Failed to ${isEdit ? 'update' : 'create'} item`));
     }
   };
 
-  if (loading) return <Loading />;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">{isEdit ? 'Edit Item' : 'Create Item'}</h1>
+      <h1 className="mb-6 text-3xl font-bold">{isEdit ? 'Edit Item' : 'Create Item'}</h1>
 
-      {error && <ErrorMessage message={error} />}
+      {error && (
+        <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+          <p className="font-medium">Error</p>
+          <p>{error}</p>
+        </div>
+      )}
 
-      <div className="bg-white shadow rounded-lg p-6 max-w-2xl">
-        <form onSubmit={handleSubmit}>
-          <FormField
-            label="Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            placeholder="e.g., Camera LR, Node 4.6"
-          />
+      <div className="max-w-2xl rounded-lg bg-white p-6 shadow">
+        <form onSubmit={(e) => void handleSubmit(e)}>
+          <div className="mb-4">
+            <label htmlFor="name" className="mb-1 block text-sm font-medium text-gray-700">
+              Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              placeholder="e.g., Camera LR, Node 4.6"
+              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-          <FormField
-            label="Version"
-            name="version"
-            value={formData.version}
-            onChange={handleChange}
-            required
-            placeholder="e.g., v2.0, GA"
-          />
+          <div className="mb-4">
+            <label htmlFor="version" className="mb-1 block text-sm font-medium text-gray-700">
+              Version <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="version"
+              name="version"
+              type="text"
+              value={formData.version}
+              onChange={handleChange}
+              required
+              placeholder="e.g., v2.0, GA"
+              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-          <FormField
-            label="Description"
-            name="description"
-            type="textarea"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Optional description"
-          />
+          <div className="mb-4">
+            <label htmlFor="description" className="mb-1 block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Optional description"
+              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+            />
+          </div>
 
-          <FormField
-            label="MSRP"
-            name="msrp"
-            type="number"
-            value={formData.msrp}
-            onChange={handleChange}
-            required
-            placeholder="999.99"
-          />
+          <div className="mb-4">
+            <label htmlFor="msrp" className="mb-1 block text-sm font-medium text-gray-700">
+              MSRP <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="msrp"
+              name="msrp"
+              type="number"
+              value={formData.msrp}
+              onChange={handleChange}
+              required
+              placeholder="999.99"
+              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-          <FormField
-            label="Minimum Price"
-            name="min_price"
-            type="number"
-            value={formData.min_price}
-            onChange={handleChange}
-            required
-            placeholder="750.00"
-          />
+          <div className="mb-4">
+            <label htmlFor="min_price" className="mb-1 block text-sm font-medium text-gray-700">
+              Minimum Price <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="min_price"
+              name="min_price"
+              type="number"
+              value={formData.min_price}
+              onChange={handleChange}
+              required
+              placeholder="750.00"
+              className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
           <div className="flex space-x-4">
-            <Button type="submit">{isEdit ? 'Update' : 'Create'} Item</Button>
-            <Button type="button" variant="secondary" onClick={() => navigate('/items')}>
+            <button
+              type="submit"
+              className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+            >
+              {isEdit ? 'Update' : 'Create'} Item
+            </button>
+            <button
+              type="button"
+              className="rounded bg-gray-200 px-4 py-2 font-medium text-gray-800 hover:bg-gray-300"
+              onClick={() => navigate('/items')}
+            >
               Cancel
-            </Button>
+            </button>
           </div>
         </form>
       </div>
     </div>
   );
-};
-
-export default ItemForm;
+}

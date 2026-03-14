@@ -1,69 +1,210 @@
-import React, { useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import { getToken, setToken, redirectToLogin } from './utils/auth';
-import ItemList from './pages/items/ItemList';
-import ItemForm from './pages/items/ItemForm';
-import POList from './pages/pos/POList';
-import POForm from './pages/pos/POForm';
-import PODetail from './pages/pos/PODetail';
-import OrderList from './pages/orders/OrderList';
-import OrderForm from './pages/orders/OrderForm';
-import OrderDetail from './pages/orders/OrderDetail';
-import DeliveryList from './pages/deliveries/DeliveryList';
-import DeliveryForm from './pages/deliveries/DeliveryForm';
-import DeliveryDetail from './pages/deliveries/DeliveryDetail';
-import SerialSearch from './pages/deliveries/SerialSearch';
+import { AuthProvider } from '@inator/shared/auth/AuthProvider';
+import { ProtectedRoute } from '@inator/shared/auth/ProtectedRoute';
+import { Layout } from '@inator/shared/layout/Layout';
+import type { NavItem } from '@inator/shared/types';
+import { POList } from './pages/pos/POList';
+import { POForm } from './pages/pos/POForm';
+import { PODetail } from './pages/pos/PODetail';
+import { OrderList } from './pages/orders/OrderList';
+import { OrderForm } from './pages/orders/OrderForm';
+import { OrderDetail } from './pages/orders/OrderDetail';
+import { DeliveryList } from './pages/deliveries/DeliveryList';
+import { DeliveryForm } from './pages/deliveries/DeliveryForm';
+import { DeliveryDetail } from './pages/deliveries/DeliveryDetail';
+import { SerialSearch } from './pages/deliveries/SerialSearch';
+import { ItemList } from './pages/items/ItemList';
+import { ItemForm } from './pages/items/ItemForm';
 
-function App() {
+const NAV_ITEMS: NavItem[] = [
+  { path: '/pos', label: '📦 Purchase Orders' },
+  { path: '/orders', label: '📋 Orders' },
+  { path: '/deliveries', label: '🚚 Deliveries' },
+  { path: '/items', label: '🏷️ Items', adminOnly: true },
+];
 
-  const isReady = useMemo(() => {
-    // Handle token from URL parameter FIRST (from Authinator)
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
-
-    if (tokenFromUrl) {
-      // Store token and remove from URL
-      setToken(tokenFromUrl);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return true;
-    } else if (!getToken()) {
-      // No token in URL or localStorage, redirect to login
-      redirectToLogin();
-      return false;
-    }
-    return true;
-  }, []);
-
-  if (!isReady) {
-    return <div>Loading...</div>;
-  }
-
+/**
+ * FULFILinator frontend — manages order fulfillment workflow.
+ * Served under /fulfil via Caddy reverse proxy.
+ */
+export default function App(): React.JSX.Element {
   return (
-    <BrowserRouter>
-      <Layout>
+    <BrowserRouter basename="/fulfil">
+      <AuthProvider>
         <Routes>
-          <Route path="/" element={<Navigate to="/items" replace />} />
-          <Route path="/items" element={<ItemList />} />
-          <Route path="/items/new" element={<ItemForm />} />
-          <Route path="/items/:id/edit" element={<ItemForm />} />
-          <Route path="/pos" element={<POList />} />
-          <Route path="/pos/new" element={<POForm />} />
-          <Route path="/pos/:id" element={<PODetail />} />
-          <Route path="/pos/:id/edit" element={<POForm />} />
-          <Route path="/orders" element={<OrderList />} />
-          <Route path="/orders/new" element={<OrderForm />} />
-          <Route path="/orders/:id" element={<OrderDetail />} />
-          <Route path="/orders/:id/edit" element={<OrderForm />} />
-          <Route path="/deliveries" element={<DeliveryList />} />
-          <Route path="/deliveries/new" element={<DeliveryForm />} />
-          <Route path="/deliveries/search" element={<SerialSearch />} />
-          <Route path="/deliveries/:id" element={<DeliveryDetail />} />
-          <Route path="/deliveries/:id/edit" element={<DeliveryForm />} />
+          {/* Purchase Orders */}
+          <Route
+            path="/pos"
+            element={
+              <ProtectedRoute>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <POList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pos/new"
+            element={
+              <ProtectedRoute adminOnly>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <POForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pos/:id"
+            element={
+              <ProtectedRoute>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <PODetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pos/:id/edit"
+            element={
+              <ProtectedRoute adminOnly>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <POForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Orders */}
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <OrderList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders/new"
+            element={
+              <ProtectedRoute adminOnly>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <OrderForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders/:id"
+            element={
+              <ProtectedRoute>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <OrderDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders/:id/edit"
+            element={
+              <ProtectedRoute adminOnly>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <OrderForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Deliveries */}
+          <Route
+            path="/deliveries"
+            element={
+              <ProtectedRoute>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <DeliveryList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/deliveries/search"
+            element={
+              <ProtectedRoute>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <SerialSearch />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/deliveries/new"
+            element={
+              <ProtectedRoute adminOnly>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <DeliveryForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/deliveries/:id"
+            element={
+              <ProtectedRoute>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <DeliveryDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/deliveries/:id/edit"
+            element={
+              <ProtectedRoute adminOnly>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <DeliveryForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Items */}
+          <Route
+            path="/items"
+            element={
+              <ProtectedRoute adminOnly>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <ItemList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/items/new"
+            element={
+              <ProtectedRoute adminOnly>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <ItemForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/items/:id/edit"
+            element={
+              <ProtectedRoute adminOnly>
+                <Layout title="FULFILinator" navItems={NAV_ITEMS}>
+                  <ItemForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/pos" replace />} />
+          <Route path="*" element={<Navigate to="/pos" replace />} />
         </Routes>
-      </Layout>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
-
-export default App;
